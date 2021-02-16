@@ -32,6 +32,8 @@
                    <func_SetParamStringValue>FirmwareUpgrade_SetParamStringValue</func_SetParamStringValue>
                    <func_GetParamBoolValue>FirmwareUpgrade_GetParamBoolValue</func_GetParamBoolValue>
                    <func_SetParamBoolValue>FirmwareUpgrade_SetParamBoolValue</func_SetParamBoolValue>
+                   <func_GetParamIntValue>FirmwareUpgrade_GetParamIntValue</func_GetParamIntValue>
+                   <func_SetParamIntValue>FirmwareUpgrade_SetParamIntValue</func_SetParamIntValue>
                 </functions>
                 <parameters>
                     <parameter>
@@ -62,7 +64,39 @@
                         <syntax>bool</syntax>
                         <writable>true</writable>
                     </parameter>
+                    <parameter>
+                        <name>X_RDKCENTRAL-COM_FirmwareDownloadAndFactoryReset</name>
+                        <type>int</type>
+                        <syntax>int</syntax>
+                        <writable>true</writable>
+                    </parameter>
                 </parameters>
+		<objects>
+                    <object>
+                        <name>X_RDKCENTRAL-COM_xOpsDeviceMgmt</name>
+                        <objectType>object</objectType>
+                        <functions />
+                        <parameters />
+                        <objects>
+                            <object>
+                                <name>RPC</name>
+                                <objectType>object</objectType>
+                                <functions>
+                                    <func_GetParamUlongValue>FirmwareUpgradeRPC_GetParamUlongValue</func_GetParamUlongValue>
+                                    <func_SetParamUlongValue>FirmwareUpgradeRPC_SetParamUlongValue</func_SetParamUlongValue>
+                                </functions>
+                                <parameters>
+                                    <parameter>
+                                        <name>DeferFWDownloadReboot</name>
+                                        <type>unsignedInt</type>
+                                        <syntax>uint32</syntax>
+                                        <writable>true</writable>
+                                    </parameter>
+                                </parameters>
+                            </object>
+                        </objects>
+                    </object>
+		</objects>
         </object>
     </objects>
 </dataModelInfo>

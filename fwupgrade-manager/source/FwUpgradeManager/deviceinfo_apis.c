@@ -35,6 +35,7 @@
 #include "deviceinfo_apis.h"
 #include "ssp_global.h"
 #include "fwupgrade_hal.h"
+#include <syscfg.h>
 
 ANSC_STATUS FwDlDmlDIGetDLFlag(ANSC_HANDLE hContext)
 {
@@ -217,6 +218,81 @@ ANSC_STATUS FwDlDmlDIDownloadNow(ANSC_HANDLE hContext)
     return ANSC_STATUS_SUCCESS;
 }
 
+ANSC_STATUS FwDlDmlDIDownloadAndFactoryReset(ANSC_HANDLE hContext)
+{
+    PDEVICE_INFO     pMyObject = (PDEVICE_INFO)hContext;
+    int dl_status = 0;
+    int ret = ANSC_STATUS_FAILURE, res = 0;
+    char valid_fw[128]={0};
+    char pHttpUrl[CM_HTTPURL_LEN] = {'0'};
+
+    if(strlen(pMyObject->Firmware_To_Download) && strlen(pMyObject->DownloadURL))
+    {
+        convert_to_validFW(pMyObject->Firmware_To_Download,valid_fw);
+        if(AnscEqualString(valid_fw, pMyObject->Current_Firmware, FALSE))
+        {
+            CcspTraceError((" Current FW is same, Ignoring request \n"));
+            return ANSC_STATUS_FAILURE;
+        }
+
+        strcpy(pHttpUrl, "'");
+        strncat(pHttpUrl, pMyObject->DownloadURL, CM_HTTPURL_LEN - 1);
+        strcat(pHttpUrl, "/");
+        strncat(pHttpUrl, pMyObject->Firmware_To_Download, CM_HTTPURL_LEN - 1);
+        strcat(pHttpUrl, "'");
+
+        ret = ANSC_STATUS_FAILURE;
+        ret = fwupgrade_hal_set_download_url(pHttpUrl , pMyObject->Firmware_To_Download);
+
+        if( ret == ANSC_STATUS_FAILURE)
+        {
+            CcspTraceError((" Failed to set URL, Ignoring request \n"));
+            return ANSC_STATUS_FAILURE;
+        }
+
+    }
+    else
+    {
+        CcspTraceError((" URL or FW Name is missing, Ignoring request \n"));
+        return ANSC_STATUS_FAILURE;
+    }
+
+    dl_status = fwupgrade_hal_get_download_status();
+    if(dl_status > 0 && dl_status <= 100)
+    {
+        CcspTraceError((" Already Downloading In Progress, Ignoring request \n"));
+        return ANSC_STATUS_FAILURE;
+    }
+    else if(dl_status == 200)
+    {
+        CcspTraceError((" Image is already downloaded, Ignoring request \n"));
+        return ANSC_STATUS_FAILURE;
+    }
+
+    ret = ANSC_STATUS_FAILURE;
+    ret = fwupgrade_hal_set_download_interface(1); // interface=0 for wan0, interface=1 for erouter0
+
+    if( ret == ANSC_STATUS_FAILURE)
+    {
+        CcspTraceError((" Failed to set Interface, Ignoring request \n"));
+        return ANSC_STATUS_FAILURE;
+    }
+
+    pthread_t FWDL_Thread;
+    res = pthread_create(&FWDL_Thread, NULL, FwDlAndFR_ThreadFunc, "FwDlAndFR_ThreadFunc");
+    if(res != 0)
+    {
+        CcspTraceError(("Create FWDL_Thread error %d\n", res));
+    }
+    else
+    {
+        CcspTraceInfo(("Image downloading triggered successfully \n"));
+    }
+
+    return ANSC_STATUS_SUCCESS;
+}
+
+
 ANSC_STATUS FwDlDmlDISetURL(ANSC_HANDLE hContext, char *URL)
 {
     PDEVICE_INFO     pMyObject = (PDEVICE_INFO)hContext;
@@ -314,6 +390,81 @@ void FwDl_ThreadFunc()
     }
 }
 
+void FwDlAndFR_ThreadFunc()
+{
+    int dl_status = 0;
+    int ret = ANSC_STATUS_FAILURE;
+    ULONG reboot_ready_status = 0;
+
+    pthread_detach(pthread_self());
+
+    ret = fwupgrade_hal_update_and_factoryreset ();
+    if( ret == ANSC_STATUS_FAILURE)
+    {
+        CcspTraceError((" Failed to start download \n"));
+        return;
+    }
+    else
+    {
+        /* Sleeping since the status returned is 500 on immediate status query */
+        CcspTraceInfo((" Sleeping to prevent 500 error \n"));
+        sleep(10);
+
+        /* Check if the /tmp/wget.log file was created, if not wait an adidtional time */
+        if (access("/tmp/wget.log", F_OK) != 0)
+        {
+            CcspTraceInfo(("/tmp/wget.log doesn't exist. Sleeping an additional 10 seconds \n"));
+            sleep(10);
+        }
+        else
+        {
+            CcspTraceInfo(("/tmp/wget.log created . Continue ...\n"));
+        }
+
+        CcspTraceInfo((" Waiting for FW DL ... \n"));
+        while(1)
+        {
+            dl_status = fwupgrade_hal_get_download_status();
+
+            if(dl_status >= 0 && dl_status <= 100)
+                sleep(2);
+            else if(dl_status == 200)
+                break;
+            else if(dl_status >= 400)
+            {
+                CcspTraceError((" FW DL is failed with status %d \n", dl_status));
+                return;
+            }
+        }
+
+        CcspTraceInfo((" Waiting for reboot ready ... \n"));
+        while(1)
+        {
+            ret = fwupgrade_hal_reboot_ready(&reboot_ready_status);
+
+            if(ret == ANSC_STATUS_SUCCESS && reboot_ready_status == 1)
+                break;
+            else
+                sleep(5);
+        }
+        CcspTraceInfo((" Waiting for reboot ready over, setting last reboot reason \n"));
+
+        system("dmcli eRT setv Device.DeviceInfo.X_RDKCENTRAL-COM_LastRebootReason string Forced_Software_upgrade");
+
+        ret = ANSC_STATUS_FAILURE;
+        ret = fwupgrade_hal_download_reboot_now();
+
+        if(ret == ANSC_STATUS_SUCCESS)
+        {
+            CcspTraceInfo((" Rebooting the device now!\n"));
+        }
+        else
+        {
+            CcspTraceError((" Reboot Already in progress!\n"));
+        }
+    }
+}
+
 convert_to_validFW(char *fw,char *valid_fw)
 {
     /* Valid FW names
@@ -336,4 +487,40 @@ convert_to_validFW(char *fw,char *valid_fw)
     strncpy(valid_fw,fw,strlen(fw)-buff_len);
 
     CcspTraceInfo((" Converted image name = %s \n", valid_fw));
+}
+
+void FwDlDmlDISetDeferFWDownloadReboot(ULONG* DeferFWDownloadReboot, ULONG uValue)
+{
+    char buf[8] = { 0 };
+
+    sprintf(buf,"%d",uValue);
+    if ( syscfg_set( NULL,"DeferFWDownloadReboot",buf)!= 0 )
+    {
+        CcspTraceWarning(("syscfg_set failed\n"));
+    }
+    else
+    {
+        if ( syscfg_commit( ) != 0 )
+        {
+            CcspTraceWarning(("syscfg_commit failed\n"));
+        }
+        else
+        {
+            *DeferFWDownloadReboot =     uValue;
+        }
+    }
+}
+
+void FwDlDmlDIGetDeferFWDownloadReboot(ULONG* puLong)
+{
+    char buf[8] = { 0 };
+
+    if( 0 == syscfg_get( NULL, "DeferFWDownloadReboot", buf, sizeof( buf ) ) )
+    {
+        *puLong = atoi(buf);
+    }
+    else
+    {
+        CcspTraceWarning(("syscfg_get failed\n"));
+    }
 }

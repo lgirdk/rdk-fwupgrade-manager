@@ -53,5 +53,46 @@ FirmwareUpgrade_SetParamBoolValue
         BOOL                        bValue
     );
 
+BOOL
+FirmwareUpgrade_GetParamIntValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        int*                        pInt
+    );
+
+BOOL
+FirmwareUpgrade_SetParamIntValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        int                         iValue
+    );
+
+/***********************************************************************
+
+ APIs for Object:
+
+    DeviceInfo.X_RDKCENTRAL-COM_xOpsDeviceMgmt.RPC.
+
+    *  FirmwareUpgradeRPC_GetParamUlongValue
+    *  FirmwareUpgradeRPC_SetParamUlongValue
+
+***********************************************************************/
+BOOL
+FirmwareUpgradeRPC_GetParamUlongValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        ULONG*                      puLong
+    );
+
+BOOL
+FirmwareUpgradeRPC_SetParamUlongValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        ULONG                       uValue
+    );
 
 #endif

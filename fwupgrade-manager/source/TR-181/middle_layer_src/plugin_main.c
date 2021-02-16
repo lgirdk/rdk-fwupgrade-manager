@@ -109,6 +109,10 @@ int ANSC_EXPORT_API FirmwareUpgradeDmlInit
     pPlugInfo->RegisterFunction(pPlugInfo->hContext, "FirmwareUpgrade_SetParamStringValue",  FirmwareUpgrade_SetParamStringValue);
     pPlugInfo->RegisterFunction(pPlugInfo->hContext, "FirmwareUpgrade_GetParamBoolValue",  FirmwareUpgrade_GetParamBoolValue);
     pPlugInfo->RegisterFunction(pPlugInfo->hContext, "FirmwareUpgrade_SetParamBoolValue", FirmwareUpgrade_SetParamBoolValue);
+	pPlugInfo->RegisterFunction(pPlugInfo->hContext, "FirmwareUpgrade_GetParamIntValue",  FirmwareUpgrade_GetParamIntValue);
+    pPlugInfo->RegisterFunction(pPlugInfo->hContext, "FirmwareUpgrade_SetParamIntValue", FirmwareUpgrade_SetParamIntValue);
+    pPlugInfo->RegisterFunction(pPlugInfo->hContext, "FirmwareUpgradeRPC_GetParamUlongValue", FirmwareUpgradeRPC_GetParamUlongValue);
+    pPlugInfo->RegisterFunction(pPlugInfo->hContext, "FirmwareUpgradeRPC_SetParamUlongValue", FirmwareUpgradeRPC_SetParamUlongValue);
 
     g_pDslhDmlAgent                 = pPlugInfo->hDmlAgent;
     pGetParamValueByPathNameProc = (COSAGetParamValueByPathNameProc)pPlugInfo->AcquireFunction("COSAGetParamValueByPathName");

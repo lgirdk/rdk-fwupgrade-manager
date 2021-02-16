@@ -43,9 +43,13 @@ ANSC_STATUS FwDlDmlDIGetFWVersion(ANSC_HANDLE hContext);
 ANSC_STATUS FwDlDmlDIGetDLStatus(ANSC_HANDLE hContext, char *DL_Status);
 ANSC_STATUS FwDlDmlDIGetProtocol(ANSC_HANDLE hContext, char *Protocol);
 ANSC_STATUS FwDlDmlDIDownloadNow(ANSC_HANDLE hContext);
+ANSC_STATUS FwDlDmlDIDownloadAndFactoryReset(ANSC_HANDLE hContext);
 ANSC_STATUS FwDlDmlDISetURL(ANSC_HANDLE hContext, char *URL);
 ANSC_STATUS FwDlDmlDISetImage(ANSC_HANDLE hContext, char *Image);
+void FwDlDmlDIGetDeferFWDownloadReboot(ULONG* puLong);
+void FwDlDmlDISetDeferFWDownloadReboot(ULONG* DeferFWDownloadReboot, ULONG uValue);
 void FwDl_ThreadFunc();
+void FwDlAndFR_ThreadFunc();
 convert_to_validFW(char *fw,char *valid_fw);
 
 #endif

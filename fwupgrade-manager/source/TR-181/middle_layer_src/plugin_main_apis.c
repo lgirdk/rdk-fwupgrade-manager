@@ -176,8 +176,16 @@ BackEndManagerInitialize
     memset (pMyObject->pDeviceInfo, 0, sizeof(DEVICE_INFO));
     FwDlDmlDIGetDLFlag((ANSC_HANDLE) pMyObject->pDeviceInfo);
 
+    if(syscfg_init() != 0)
+    {
+        AnscTraceError(("%s:%d:: syscfg_init failed \n", __FUNCTION__, __LINE__));
+    }
+
     if(pMyObject->pDeviceInfo->Download_Control_Flag)
+    {
         FwDlDmlDIGetFWVersion((ANSC_HANDLE)pMyObject->pDeviceInfo);
+        FwDlDmlDIGetDeferFWDownloadReboot(&pMyObject->pDeviceInfo->DeferFWDownloadReboot);
+    }
 
     return ANSC_STATUS_SUCCESS;
 }

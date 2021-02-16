@@ -309,3 +309,217 @@ FirmwareUpgrade_SetParamBoolValue
     }
     return 0;
 }
+
+/**********************************************************************
+    caller:     owner of this object
+
+    prototype:
+        BOOL
+        FirmwareUpgrade_GetParamIntValue
+            (
+                ANSC_HANDLE                 hInsContext,
+                char*                       ParamName,
+                int*                        pInt
+            );
+
+    description:
+        This function is called to retrieve Integer parameter value;
+
+    argument:   ANSC_HANDLE                 hInsContext,
+                The instance handle;
+
+                char*                       ParamName,
+                The parameter name;
+
+                INT*                        pInt
+                The buffer of returned integer value;
+
+    return:     TRUE if succeeded.
+**********************************************************************/
+BOOL
+FirmwareUpgrade_GetParamIntValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        int*                        pInt
+    )
+{
+    PDEVICE_INFO pMyObject = (PDEVICE_INFO) g_pBEManager->pDeviceInfo;
+    /* check the parameter name and return the corresponding value */
+    if( AnscEqualString(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadAndFactoryReset", TRUE) )
+    {
+         if(pMyObject->Download_Control_Flag)
+         {
+             *pInt = 0;
+         }
+         return 1;
+    }
+    return 0;
+}
+
+/**********************************************************************
+    caller:     owner of this object
+
+    prototype:
+
+        BOOL
+        FirmwareUpgrade_SetParamBoolValue
+            (
+                ANSC_HANDLE                 hInsContext,
+                char*                       ParamName,
+                INT                        bValue
+            );
+
+    description:
+
+        This function is called to set BOOL parameter value;
+
+    argument:   ANSC_HANDLE                 hInsContext,
+                The instance handle;
+
+                char*                       ParamName,
+                The parameter name;
+
+                INT                         iValue
+                The updated INT value;
+
+    return:     TRUE if succeeded.
+**********************************************************************/
+BOOL
+FirmwareUpgrade_SetParamIntValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        int                         iValue
+    )
+{
+    PDEVICE_INFO pMyObject = (PDEVICE_INFO) g_pBEManager->pDeviceInfo;
+    /* check the parameter name and set the corresponding value */
+    if( AnscEqualString(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadAndFactoryReset", TRUE))
+    {
+        if(pMyObject->Download_Control_Flag)
+        {
+            if(iValue)
+            {
+                FwDlDmlDIDownloadAndFactoryReset((ANSC_HANDLE)pMyObject);
+            }
+        }
+        else
+        {
+            CcspTraceError(("FW DL is not allowed for this image type \n"));
+        }
+        return 1;
+    }
+    return 0;
+}
+
+/***********************************************************************
+
+ APIs for Object:
+
+    DeviceInfo.X_RDKCENTRAL-COM_xOpsDeviceMgmt.RPC.
+
+    *  FirmwareUpgradeRPC_GetParamUlongValue
+    *  FirmwareUpgradeRPC_SetParamUlongValue
+
+***********************************************************************/
+
+/**********************************************************************
+
+    caller:     owner of this object
+
+    prototype:
+
+        BOOL
+        FirmwareUpgradeRPC_GetParamUlongValue
+            (
+                ANSC_HANDLE                 hInsContext,
+                char*                       ParamName,
+                ULONG*                      puLong
+            );
+
+    description:
+
+        This function is called to retrieve ULONG parameter value;
+
+    argument:   ANSC_HANDLE                 hInsContext,
+                The instance handle;
+
+                char*                       ParamName,
+                The parameter name;
+
+                ULONG*                      puLong
+                The buffer of returned ULONG value;
+
+    return:     TRUE if succeeded.
+
+**********************************************************************/
+BOOL
+FirmwareUpgradeRPC_GetParamUlongValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        ULONG*                      puLong
+    )
+{
+	PDEVICE_INFO pMyObject = (PDEVICE_INFO) g_pBEManager->pDeviceInfo;
+    /* check the parameter name and return the corresponding value */
+    if( AnscEqualString(ParamName, "DeferFWDownloadReboot", TRUE))
+    {
+        /* collect value */
+        *puLong = pMyObject->DeferFWDownloadReboot;
+        return TRUE;
+    }
+    /* CcspTraceWarning(("Unsupported parameter '%s'\n", ParamName)); */
+    return FALSE;
+}
+
+/**********************************************************************
+
+    caller:     owner of this object
+
+    prototype:
+
+        BOOL
+        FirmwareUpgradeRPC_SetParamUlongValue
+            (
+                ANSC_HANDLE                 hInsContext,
+                char*                       ParamName,
+                ULONG                       uValue
+            );
+
+    description:
+
+        This function is called to set ULONG parameter value;
+
+    argument:   ANSC_HANDLE                 hInsContext,
+                The instance handle;
+
+                char*                       ParamName,
+                The parameter name;
+
+                ULONG                       uValue
+                The updated ULONG value;
+
+    return:     TRUE if succeeded.
+
+**********************************************************************/
+BOOL
+FirmwareUpgradeRPC_SetParamUlongValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        ULONG                       uValue
+    )
+{
+	PDEVICE_INFO pMyObject = (PDEVICE_INFO) g_pBEManager->pDeviceInfo;
+    /* check the parameter name and set the corresponding value */
+    if( AnscEqualString(ParamName, "DeferFWDownloadReboot", TRUE))
+    {
+        /* collect value */
+		FwDlDmlDISetDeferFWDownloadReboot(&(pMyObject->DeferFWDownloadReboot), uValue);
+		return TRUE;
+    }
+    /* CcspTraceWarning(("Unsupported parameter '%s'\n", ParamName)); */
+    return FALSE;
+}
