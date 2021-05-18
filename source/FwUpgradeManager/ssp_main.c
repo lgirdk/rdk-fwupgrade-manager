@@ -36,6 +36,9 @@
 #include "ssp_internal.h"
 #include "ssp_global.h"
 #include "ssp_messagebus_interface.h"
+#include "cap.h"
+
+cap_user appcaps;
 
 #define DEBUG_INI_NAME  "/etc/debug.ini"
 
@@ -227,10 +230,23 @@ int main(int argc, char* argv[])
     int                 cmdChar            = 0;
     int                 err;
     char                *subSys = NULL;
+    appcaps.caps = NULL;
+    appcaps.user_name = NULL;
+    char buf[8] = {'\0'};
 
 #ifdef FEATURE_SUPPORT_RDKLOG
     RDK_LOGGER_INIT();
 #endif
+    syscfg_init();
+    syscfg_get( NULL, "NonRootSupport", buf, sizeof(buf));
+    if( buf != NULL )  {
+        if (strncmp(buf, "true", strlen("true")) == 0) {
+            init_capability();
+            drop_root_caps(&appcaps);
+            update_process_caps(&appcaps);
+            read_capability(&appcaps);
+        }
+    }
 
     for(idx = 1; idx < argc; idx++)
     {
