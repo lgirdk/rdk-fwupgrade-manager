@@ -35,7 +35,10 @@
 #include "deviceinfo_apis.h"
 #include "ssp_global.h"
 #include "fwupgrade_hal.h"
+#include "cap.h"
 #include <syscfg.h>
+
+extern cap_user appcaps;
 
 ANSC_STATUS FwDlDmlDIGetDLFlag(ANSC_HANDLE hContext)
 {
@@ -318,12 +321,13 @@ void FwDl_ThreadFunc()
     ULONG reboot_ready_status = 0;
 
     pthread_detach(pthread_self());
-
+    CcspTraceInfo(("Gaining root permission to download and write the code to flash \n"));
+    gain_root_privilege();
     ret = fwupgrade_hal_download ();
     if( ret == ANSC_STATUS_FAILURE)
     {
         CcspTraceError((" Failed to start download \n"));
-        return;
+        goto EXIT;
     }
     else
     {
@@ -356,7 +360,7 @@ void FwDl_ThreadFunc()
             else if(dl_status >= 400)
             {
                 CcspTraceError((" FW DL is failed with status %d \n", dl_status));
-                return;
+                goto EXIT;
             }
         }
 
@@ -388,6 +392,12 @@ void FwDl_ThreadFunc()
             CcspTraceError((" Reboot Already in progress!\n"));
         }
     }
+
+EXIT:
+    CcspTraceInfo(("Dropping root permission...\n"));
+    init_capability();
+    drop_root_caps(&appcaps);
+    update_process_caps(&appcaps);
 }
 
 void FwDlAndFR_ThreadFunc()
