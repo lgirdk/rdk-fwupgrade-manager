@@ -37,7 +37,9 @@
 #include "ssp_global.h"
 #include "ssp_messagebus_interface.h"
 #include "cap.h"
-
+#ifdef FEATURE_RDKB_LED_MANAGER
+#include <sysevent/sysevent.h>
+#endif
 cap_user appcaps;
 
 #define DEBUG_INI_NAME  "/etc/debug.ini"
@@ -45,6 +47,13 @@ cap_user appcaps;
 char                                        g_Subsystem[32]         = {0};
 extern char*                                pComponentName;
 extern ANSC_HANDLE                          bus_handle;
+
+#ifdef FEATURE_RDKB_LED_MANAGER
+#define SYSEVENT_LED_STATE    "led_event"
+#define SYS_IP_ADDR    "127.0.0.1"
+int sysevent_fd = -1;
+token_t sysevent_token;
+#endif
 
 #if defined(_ANSC_LINUX)
 static void daemonize(void) 
@@ -239,6 +248,9 @@ int main(int argc, char* argv[])
 #endif
     syscfg_init();
     syscfg_get( NULL, "NonRootSupport", buf, sizeof(buf));
+#ifdef FEATURE_RDKB_LED_MANAGER
+    sysevent_fd =  sysevent_open(SYS_IP_ADDR, SE_SERVER_WELL_KNOWN_PORT, SE_VERSION, "fw_upgrade", &sysevent_token);
+#endif
     if( buf != NULL )  {
         if (strncmp(buf, "true", strlen("true")) == 0) {
             init_capability();
@@ -348,6 +360,12 @@ int main(int argc, char* argv[])
         }
     }
 
+#endif
+#ifdef FEATURE_RDKB_LED_MANAGER
+    if (0 <= sysevent_fd)
+    {
+        sysevent_close(sysevent_fd, sysevent_token);
+    }
 #endif
     err = Cdm_Term();
     if (err != CCSP_SUCCESS)

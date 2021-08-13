@@ -37,8 +37,19 @@
 #include "fwupgrade_hal.h"
 #include "cap.h"
 #include <syscfg.h>
+#ifdef FEATURE_RDKB_LED_MANAGER
+#include <sysevent/sysevent.h>
+#endif
 
 extern cap_user appcaps;
+#ifdef FEATURE_RDKB_LED_MANAGER
+extern int sysevent_fd ;
+extern token_t sysevent_token;
+#define SYSEVENT_LED_STATE    "led_event"
+#define FW_UPDATE_START_EVENT "rdkb_fwupdate_start"
+#define FW_UPDATE_STOP_EVENT "rdkb_fwupdate_stop"
+#define FW_UPDATE_COMPLETE_EVENT "rdkb_fwupdate_complete"
+#endif
 
 ANSC_STATUS FwDlDmlDIGetDLFlag(ANSC_HANDLE hContext)
 {
@@ -323,10 +334,24 @@ void FwDl_ThreadFunc()
     pthread_detach(pthread_self());
     CcspTraceInfo(("Gaining root permission to download and write the code to flash \n"));
     gain_root_privilege();
+#ifdef FEATURE_RDKB_LED_MANAGER
+    // The hal function will start download and flash the image. Set breathing led here
+    if(sysevent_fd != -1)
+    {
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_UPDATE_START_EVENT, 0);
+    }
+#endif
     ret = fwupgrade_hal_download ();
     if( ret == ANSC_STATUS_FAILURE)
     {
         CcspTraceError((" Failed to start download \n"));
+#ifdef FEATURE_RDKB_LED_MANAGER
+    /* Either image download or flashing failed. set previous state */
+    if(sysevent_fd != -1)
+    {
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_UPDATE_STOP_EVENT, 0);
+    }
+#endif
         goto EXIT;
     }
     else
@@ -360,10 +385,23 @@ void FwDl_ThreadFunc()
             else if(dl_status >= 400)
             {
                 CcspTraceError((" FW DL is failed with status %d \n", dl_status));
+#ifdef FEATURE_RDKB_LED_MANAGER
+                /* Either image download or flashing failed. set previous state */
+                if(sysevent_fd != -1)
+                {
+                    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_UPDATE_STOP_EVENT, 0);
+                }
+#endif
                 goto EXIT;
             }
         }
-
+#ifdef FEATURE_RDKB_LED_MANAGER
+        /* we are here because fw download and flashing succeeded . Set previous led state just before reboot*/
+        if(sysevent_fd != -1)
+        {
+            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_UPDATE_COMPLETE_EVENT, 0);
+        }
+#endif
         CcspTraceInfo((" FW DL is over \n"));
 
         CcspTraceInfo((" Waiting for reboot ready ... \n"));
@@ -407,7 +445,6 @@ void FwDlAndFR_ThreadFunc()
     ULONG reboot_ready_status = 0;
 
     pthread_detach(pthread_self());
-
     ret = fwupgrade_hal_update_and_factoryreset ();
     if( ret == ANSC_STATUS_FAILURE)
     {
@@ -458,6 +495,7 @@ void FwDlAndFR_ThreadFunc()
                 sleep(5);
         }
         CcspTraceInfo((" Waiting for reboot ready over, setting last reboot reason \n"));
+
 
         system("dmcli eRT setv Device.DeviceInfo.X_RDKCENTRAL-COM_LastRebootReason string Forced_Software_upgrade");
 
