@@ -445,11 +445,14 @@ void FwDlAndFR_ThreadFunc()
     ULONG reboot_ready_status = 0;
 
     pthread_detach(pthread_self());
+    /* Gain root privilge before flashing */
+    gain_root_privilege();
     ret = fwupgrade_hal_update_and_factoryreset ();
     if( ret == ANSC_STATUS_FAILURE)
     {
         CcspTraceError((" Failed to start download \n"));
-        return;
+        /* Drop the privilege */
+        goto EXIT;
     }
     else
     {
@@ -480,7 +483,8 @@ void FwDlAndFR_ThreadFunc()
             else if(dl_status >= 400)
             {
                 CcspTraceError((" FW DL is failed with status %d \n", dl_status));
-                return;
+                /* Drop the privilege.*/
+                goto EXIT;
             }
         }
 
@@ -511,6 +515,13 @@ void FwDlAndFR_ThreadFunc()
             CcspTraceError((" Reboot Already in progress!\n"));
         }
     }
+/* Drop the privilege when flashing error happens. In successful flashing case, CPE is rebooting anyway */
+EXIT:
+    CcspTraceInfo(("Dropping root permission...\n"));
+    init_capability();
+    drop_root_caps(&appcaps);
+    update_process_caps(&appcaps);
+
 }
 
 convert_to_validFW(char *fw,char *valid_fw)
