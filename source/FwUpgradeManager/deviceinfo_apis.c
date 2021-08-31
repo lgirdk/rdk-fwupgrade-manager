@@ -46,7 +46,7 @@ extern cap_user appcaps;
 extern int sysevent_fd ;
 extern token_t sysevent_token;
 #define SYSEVENT_LED_STATE    "led_event"
-#define FW_UPDATE_START_EVENT "rdkb_fwupdate_start"
+#define FW_UPDATE_MANUAL_START_EVENT "rdkb_fwupdate_manual_start"
 #define FW_UPDATE_STOP_EVENT "rdkb_fwupdate_stop"
 #define FW_UPDATE_COMPLETE_EVENT "rdkb_fwupdate_complete"
 #endif
@@ -338,7 +338,7 @@ void FwDl_ThreadFunc()
     // The hal function will start download and flash the image. Set breathing led here
     if(sysevent_fd != -1)
     {
-        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_UPDATE_START_EVENT, 0);
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_UPDATE_MANUAL_START_EVENT, 0);
     }
 #endif
     ret = fwupgrade_hal_download ();
