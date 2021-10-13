@@ -42,6 +42,31 @@ extern ANSC_HANDLE          g_MessageBusHandle_Irep;
 extern char                 g_SubSysPrefix_Irep[32];
 
 #ifdef _ANSC_LINUX
+int
+ssp_Mbi_Initialize
+    (
+        void * user_data
+    )
+{
+    ANSC_STATUS             returnStatus    = ANSC_STATUS_SUCCESS;
+
+    return ( returnStatus == ANSC_STATUS_SUCCESS ) ? 0 : 1;
+}
+
+
+int
+ssp_Mbi_Finalize
+    (
+        void*               user_data
+    )
+{
+    ANSC_STATUS             returnStatus    = ANSC_STATUS_SUCCESS;
+
+    returnStatus = ssp_cancel();
+
+    return ( returnStatus == ANSC_STATUS_SUCCESS ) ? 0 : 1;
+}
+
 DBusHandlerResult
 CcspComp_path_message_func
     (
@@ -171,31 +196,6 @@ ssp_Mbi_MessageBusEngage
 }
 
 #endif
-int
-ssp_Mbi_Initialize
-    (
-        void * user_data
-    )
-{
-    ANSC_STATUS             returnStatus    = ANSC_STATUS_SUCCESS;
-
-    return ( returnStatus == ANSC_STATUS_SUCCESS ) ? 0 : 1;
-}
-
-
-int
-ssp_Mbi_Finalize
-    (
-        void*               user_data
-    )
-{
-    ANSC_STATUS             returnStatus    = ANSC_STATUS_SUCCESS;
-
-    returnStatus = ssp_cancel();
-
-    return ( returnStatus == ANSC_STATUS_SUCCESS ) ? 0 : 1;
-}
-
 
 int
 ssp_Mbi_Buscheck

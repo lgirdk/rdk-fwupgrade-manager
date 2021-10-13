@@ -165,6 +165,8 @@ ANSC_STATUS FwDlDmlDIDownloadNow(ANSC_HANDLE hContext)
     int ret = ANSC_STATUS_FAILURE, res = 0;
     char valid_fw[128]={0};
     char pHttpUrl[CM_HTTPURL_LEN] = {'0'};
+    int downloadUrlLen = 0;
+    int HttpUrlLen = 0;
 
     if(strlen(pMyObject->Firmware_To_Download) && strlen(pMyObject->DownloadURL))
     {
@@ -175,11 +177,23 @@ ANSC_STATUS FwDlDmlDIDownloadNow(ANSC_HANDLE hContext)
             return ANSC_STATUS_FAILURE;
         }
 
-        strcpy(pHttpUrl, "'");
-        strncat(pHttpUrl, pMyObject->DownloadURL, CM_HTTPURL_LEN - 1);
-        strcat(pHttpUrl, "/");
-        strncat(pHttpUrl, pMyObject->Firmware_To_Download, CM_HTTPURL_LEN - 1);
-        strcat(pHttpUrl, "'");
+        strncpy(pHttpUrl, "'", 1);
+	
+        downloadUrlLen = strlen(pMyObject->DownloadURL);
+        HttpUrlLen = strlen(pHttpUrl);
+
+        if ((downloadUrlLen + HttpUrlLen) < CM_HTTPURL_LEN )
+            strncat(pHttpUrl, pMyObject->DownloadURL, downloadUrlLen);
+
+        strncat(pHttpUrl, "/", 1);
+
+        downloadUrlLen = strlen(pMyObject->Firmware_To_Download);
+        HttpUrlLen = strlen(pHttpUrl);
+
+        if ((downloadUrlLen + HttpUrlLen) < CM_HTTPURL_LEN )
+            strncat(pHttpUrl, pMyObject->Firmware_To_Download, downloadUrlLen);
+        
+        strncat(pHttpUrl, "'", 1);
 
         ret = ANSC_STATUS_FAILURE;
         ret = fwupgrade_hal_set_download_url(pHttpUrl , pMyObject->Firmware_To_Download);
@@ -239,6 +253,8 @@ ANSC_STATUS FwDlDmlDIDownloadAndFactoryReset(ANSC_HANDLE hContext)
     int ret = ANSC_STATUS_FAILURE, res = 0;
     char valid_fw[128]={0};
     char pHttpUrl[CM_HTTPURL_LEN] = {'0'};
+    int downloadUrlLen = 0;
+    int HttpUrlLen = 0;
 
     if(strlen(pMyObject->Firmware_To_Download) && strlen(pMyObject->DownloadURL))
     {
@@ -249,11 +265,23 @@ ANSC_STATUS FwDlDmlDIDownloadAndFactoryReset(ANSC_HANDLE hContext)
             return ANSC_STATUS_FAILURE;
         }
 
-        strcpy(pHttpUrl, "'");
-        strncat(pHttpUrl, pMyObject->DownloadURL, CM_HTTPURL_LEN - 1);
-        strcat(pHttpUrl, "/");
-        strncat(pHttpUrl, pMyObject->Firmware_To_Download, CM_HTTPURL_LEN - 1);
-        strcat(pHttpUrl, "'");
+        strncpy(pHttpUrl, "'", 1);
+
+        downloadUrlLen = strlen(pMyObject->DownloadURL);
+        HttpUrlLen = strlen(pHttpUrl);
+
+       if ((downloadUrlLen + HttpUrlLen) < CM_HTTPURL_LEN )
+            strncat(pHttpUrl, pMyObject->DownloadURL, downloadUrlLen);
+
+        strncat(pHttpUrl, "/", 1);
+
+        downloadUrlLen = strlen(pMyObject->Firmware_To_Download);
+        HttpUrlLen = strlen(pHttpUrl);
+
+       if ((downloadUrlLen + HttpUrlLen) < CM_HTTPURL_LEN )
+            strncat(pHttpUrl, pMyObject->Firmware_To_Download, CM_HTTPURL_LEN - 1);
+        
+        strncat(pHttpUrl, "'", 1);
 
         ret = ANSC_STATUS_FAILURE;
         ret = fwupgrade_hal_set_download_url(pHttpUrl , pMyObject->Firmware_To_Download);
