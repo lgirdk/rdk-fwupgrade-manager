@@ -30,5 +30,5 @@ fwupgrademanager_DEPENDENCIES = \
 fwupgrademanager_CFLAGS = $(SYSTEMD_CFLAGS) $(NONROOT_CFLAGS)
 fwupgrademanager_CPPFLAGS = -I$(top_srcdir)/source/TR-181/include -I$(top_srcdir)/source/TR-181/middle_layer_src
 fwupgrademanager_SOURCES = deviceinfo_apis.c Makefile.am ssp_action.c ssp_internal.h ssp_main.c ssp_messagebus_interface.c
-fwupgrademanager_LDFLAGS = -lccsp_common -ldl -lfw_upgrade $(SYSTEMD_LDFLAGS) -lrdkloggers -lhal_platform -lsyscfg -lsysevent -lprivilege
+fwupgrademanager_LDFLAGS = -lccsp_common -ldl -lfw_upgrade $(SYSTEMD_LDFLAGS) -lrdkloggers -lhal_platform -lsyscfg -lsysevent -lprivilege -lpthread
 fwupgrademanager_LDADD = $(fwupgrademanager_DEPENDENCIES)
