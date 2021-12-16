@@ -16,19 +16,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##########################################################################
+AM_CFLAGS =
 
-AM_CFLAGS = -D_ANSC_LINUX
-AM_CFLAGS += -D_ANSC_USER
-AM_LDFLAGS = -lccsp_common
-
-AM_CPPFLAGS = -Wall -Werror
 ACLOCAL_AMFLAGS = -I m4
-hardware_platform = i686-linux-gnu
 
 noinst_LTLIBRARIES = libfwupgrademanager_middle_layer_src.la
-libfwupgrademanager_middle_layer_src_la_CPPFLAGS = -I$(top_srcdir)/source/TR-181/include -I$(top_srcdir)/source/TR-181/middle_layer_src -I$(top_srcdir)/source/FwUpgradeManager
 
+libfwupgrademanager_middle_layer_src_la_CPPFLAGS = -I$(top_srcdir)/source/TR-181/include -I$(top_srcdir)/source/TR-181/middle_layer_src -I$(top_srcdir)/source/FwUpgradeManager
 libfwupgrademanager_middle_layer_src_la_SOURCES = fwupgrademgr_dml.c  plugin_main_apis.c  plugin_main_apis.h  plugin_main.c
 libfwupgrademanager_middle_layer_src_la_LDFLAGS = -lccsp_common -lrdkloggers -lhal_platform $(DBUS_LIBS) $(SYSTEMD_LDFLAGS) 
-
-
