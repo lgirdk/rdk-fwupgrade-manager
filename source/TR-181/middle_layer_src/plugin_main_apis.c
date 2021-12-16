@@ -32,6 +32,7 @@
  * limitations under the License.
  */
 
+#include <syscfg/syscfg.h>
 
 #include "plugin_main_apis.h"
 #include "ssp_global.h"

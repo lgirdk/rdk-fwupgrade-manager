@@ -37,6 +37,7 @@
 #include "ssp_global.h"
 #include "ssp_messagebus_interface.h"
 #include "cap.h"
+#include <syscfg/syscfg.h>
 #ifdef FEATURE_RDKB_LED_MANAGER
 #include <sysevent/sysevent.h>
 #endif
