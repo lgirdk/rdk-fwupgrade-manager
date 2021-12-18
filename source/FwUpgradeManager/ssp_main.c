@@ -32,6 +32,7 @@
  * limitations under the License.
  */
 
+#include <execinfo.h>
 
 #include "ssp_internal.h"
 #include "ssp_global.h"
