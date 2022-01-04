@@ -213,12 +213,6 @@ void sig_handler(int sig)
     {
         signal(SIGALRM, sig_handler); /* reset it to this function */
         CcspTraceInfo(("SIGALRM received!\n"));
-#ifndef DISABLE_LOGAGENT
-        RDKLogEnable = GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_LoggerEnable");
-        RDKLogLevel = (char)GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_LogLevel");
-        FWUPGRADEMGR_RDKLogLevel = GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_FwUpgradeManager_LogLevel");
-        FWUPGRADEMGR_RDKLogEnable = (char)GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_FwUpgradeManager_LoggerEnable");
-#endif
     }
     else 
     {
@@ -286,11 +280,6 @@ int main(int argc, char* argv[])
 
     cmd_dispatch('e');
 
-    RDKLogEnable = GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_LoggerEnable");
-    RDKLogLevel = (char)GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_LogLevel");
-    FWUPGRADEMGR_RDKLogLevel = GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_FwUpgradeManager_LogLevel");
-    FWUPGRADEMGR_RDKLogEnable = (char)GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_FwUpgradeManager_LoggerEnable");
-
     while ( cmdChar != 'q' )
     {
         cmdChar = getchar();
@@ -329,11 +318,6 @@ int main(int argc, char* argv[])
 #else
     subSys = NULL;      /* use default sub-system */
 #endif
-
-    RDKLogEnable = GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_LoggerEnable");
-    RDKLogLevel = (char)GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_LogLevel");
-    FWUPGRADEMGR_RDKLogLevel = GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_FwUpgradeManager_LogLevel");
-    FWUPGRADEMGR_RDKLogEnable = (char)GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_FwUpgradeManager_LoggerEnable");
 
     err = Cdm_Init(bus_handle, subSys, NULL, NULL, pComponentName);
     if (err != CCSP_SUCCESS)
