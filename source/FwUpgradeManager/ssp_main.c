@@ -57,7 +57,6 @@ int sysevent_fd = -1;
 token_t sysevent_token;
 #endif
 
-#if defined(_ANSC_LINUX)
 static void daemonize(void) 
 {
     int fd;
@@ -105,7 +104,6 @@ static int  cmd_dispatch(int  command)
     {
         case    'e' :
 
-#ifdef _ANSC_LINUX
             CcspTraceInfo(("Connect to bus daemon...\n"));
 
             {
@@ -127,7 +125,6 @@ static int  cmd_dispatch(int  command)
                      RDK_COMPONENT_PATH_PLATFORM_MANAGER
                     );
             }
-#endif
 
             ssp_create();
             ssp_engage();
@@ -231,7 +228,6 @@ void sig_handler(int sig)
     }
 
 }
-#endif
 
 int main(int argc, char* argv[])
 {
@@ -283,24 +279,6 @@ int main(int argc, char* argv[])
 
     pComponentName          = RDK_COMPONENT_NAME_PLATFORM_MANAGER;
 
-#if defined(_ANSC_WINDOWSNT)
-    AnscStartupSocketWrapper(NULL);
-
-    cmd_dispatch('e');
-
-    RDKLogEnable = GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_LoggerEnable");
-    RDKLogLevel = (char)GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_LogLevel");
-    FWUPGRADEMGR_RDKLogLevel = GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_FwUpgradeManager_LogLevel");
-    FWUPGRADEMGR_RDKLogEnable = (char)GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_FwUpgradeManager_LoggerEnable");
-
-    while ( cmdChar != 'q' )
-    {
-        cmdChar = getchar();
-
-        cmd_dispatch(cmdChar);
-    }
-
-#elif defined(_ANSC_LINUX)
     if ( bRunAsDaemon ) 
         daemonize();
 
@@ -362,7 +340,6 @@ int main(int argc, char* argv[])
         }
     }
 
-#endif
 #ifdef FEATURE_RDKB_LED_MANAGER
     if (0 <= sysevent_fd)
     {
