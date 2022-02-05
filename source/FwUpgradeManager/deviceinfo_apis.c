@@ -661,29 +661,19 @@ convert_to_validFW(char *fw,char *valid_fw)
 
 void FwDlDmlDISetDeferFWDownloadReboot(ULONG* DeferFWDownloadReboot, ULONG uValue)
 {
-    char buf[8] = { 0 };
-
-    sprintf(buf,"%d",uValue);
-    if ( syscfg_set( NULL,"DeferFWDownloadReboot",buf)!= 0 )
+    if (syscfg_set_u_commit(NULL, "DeferFWDownloadReboot", uValue) != 0)
     {
         CcspTraceWarning(("syscfg_set failed\n"));
     }
     else
     {
-        if ( syscfg_commit( ) != 0 )
-        {
-            CcspTraceWarning(("syscfg_commit failed\n"));
-        }
-        else
-        {
-            *DeferFWDownloadReboot =     uValue;
-        }
+        *DeferFWDownloadReboot = uValue;
     }
 }
 
 void FwDlDmlDIGetDeferFWDownloadReboot(ULONG* puLong)
 {
-    char buf[8] = { 0 };
+    char buf[12];
 
     if( 0 == syscfg_get( NULL, "DeferFWDownloadReboot", buf, sizeof( buf ) ) )
     {
