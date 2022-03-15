@@ -39,17 +39,16 @@
 #include <syscfg.h>
 #ifdef FEATURE_RDKB_LED_MANAGER
 #include <sysevent/sysevent.h>
-#endif
-
-extern cap_user appcaps;
-#ifdef FEATURE_RDKB_LED_MANAGER
 extern int sysevent_fd ;
 extern token_t sysevent_token;
 #define SYSEVENT_LED_STATE    "led_event"
-#define FW_UPDATE_MANUAL_START_EVENT "rdkb_fwupdate_manual_start"
+#define FW_DOWNLOAD_START_EVENT "rdkb_fwdownload_start"
+#define FW_DOWNLOAD_STOP_EVENT "rdkb_fwdownload_stop"
 #define FW_UPDATE_STOP_EVENT "rdkb_fwupdate_stop"
 #define FW_UPDATE_COMPLETE_EVENT "rdkb_fwupdate_complete"
 #endif
+
+extern cap_user appcaps;
 
 ANSC_STATUS FwDlDmlDIGetDLFlag(ANSC_HANDLE hContext)
 {
@@ -362,12 +361,9 @@ void FwDl_ThreadFunc()
     pthread_detach(pthread_self());
     CcspTraceInfo(("Gaining root permission to download and write the code to flash \n"));
     gain_root_privilege();
+    // Set download led here
 #ifdef FEATURE_RDKB_LED_MANAGER
-    // The hal function will start download and flash the image. Set breathing led here
-    if(sysevent_fd != -1)
-    {
-        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_UPDATE_MANUAL_START_EVENT, 0);
-    }
+    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_DOWNLOAD_START_EVENT, 0);
 #endif
     ret = fwupgrade_hal_download ();
     if( ret == ANSC_STATUS_FAILURE)
@@ -414,10 +410,10 @@ void FwDl_ThreadFunc()
             {
                 CcspTraceError((" FW DL is failed with status %d \n", dl_status));
 #ifdef FEATURE_RDKB_LED_MANAGER
-                /* Either image download or flashing failed. set previous state */
+                /* Image download is failed */
                 if(sysevent_fd != -1)
                 {
-                    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_UPDATE_STOP_EVENT, 0);
+                    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_DOWNLOAD_STOP_EVENT, 0);
                 }
 #endif
                 goto EXIT;
@@ -475,6 +471,10 @@ void FwDlAndFR_ThreadFunc()
     pthread_detach(pthread_self());
     /* Gain root privilge before flashing */
     gain_root_privilege();
+    /* HAL layer will do downloand and flashing . Set download led */
+#ifdef FEATURE_RDKB_LED_MANAGER
+    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_DOWNLOAD_START_EVENT, 0);
+#endif
     ret = fwupgrade_hal_update_and_factoryreset ();
     if( ret == ANSC_STATUS_FAILURE)
     {
@@ -512,9 +512,25 @@ void FwDlAndFR_ThreadFunc()
             {
                 CcspTraceError((" FW DL is failed with status %d \n", dl_status));
                 /* Drop the privilege.*/
+#ifdef FEATURE_RDKB_LED_MANAGER
+                // Download failed
+                if(sysevent_fd != -1)
+                {
+                    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_DOWNLOAD_STOP_EVENT, 0);
+                }
+#endif
                 goto EXIT;
             }
         }
+
+#ifdef FEATURE_RDKB_LED_MANAGER
+        /* we are here because fw download and flashing succeeded . Set previous led state just before reboot*/
+        if(sysevent_fd != -1)
+        {
+            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_UPDATE_COMPLETE_EVENT, 0);
+        }
+#endif
+
 
         CcspTraceInfo((" Waiting for reboot ready ... \n"));
         while(1)
