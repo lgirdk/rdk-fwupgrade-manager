@@ -32,6 +32,8 @@
  * limitations under the License.
 */
 
+#include <stdio.h>
+#include <string.h>
 #include "deviceinfo_apis.h"
 #include "ssp_global.h"
 #include "fwupgrade_hal.h"
@@ -50,6 +52,78 @@ extern token_t sysevent_token;
 #define MAX_PROTOCOL  16
 
 extern cap_user appcaps;
+
+
+static int GetFirmwareName (char *pValue, unsigned long maxSize)
+{
+    static char name[64];
+
+    if (name[0] == 0)
+    {
+        FILE *fp;
+        char buf[128];  /* big enough to avoid reading incomplete lines */
+        char *s = NULL;
+        size_t len = 0;
+
+        if ((fp = fopen ("/version.txt", "r")) != NULL)
+        {
+            while (fgets (buf, sizeof(buf), fp) != NULL)
+            {
+                /*
+                   The imagename field may use either a ':' or '=' separator
+                   and the value may or not be quoted. Handle all 4 cases.
+                */
+                if ((memcmp (buf, "imagename", 9) == 0) && ((buf[9] == ':') || (buf[9] == '=')))
+                {
+                    s = (buf[10] == '"') ? &buf[11] : &buf[10];
+
+                    while (1)
+                    {
+                        int inch = s[len];
+
+                        if ((inch == '"') || (inch == '\n') || (inch == 0))
+                        {
+                            break;
+                        }
+
+                        len++;
+                    }
+
+                    break;
+                }
+            }
+
+            fclose (fp);
+        }
+
+        if (len >= sizeof(name))
+        {
+            len = sizeof(name) - 1;
+        }
+
+        memcpy (name, s, len);
+        name[len] = 0;
+    }
+
+    if (name[0] != 0)
+    {
+        size_t len = strlen(name);
+
+        if (len >= maxSize)
+        {
+            len = maxSize - 1;
+        }
+
+        memcpy (pValue, name, len);
+        pValue[len] = 0;
+
+        return 0;
+    }
+
+    pValue[0] = 0;
+
+    return -1;
+}
 
 ANSC_STATUS FwDlDmlDIGetDLFlag(ANSC_HANDLE hContext)
 {
@@ -88,33 +162,13 @@ ANSC_STATUS FwDlDmlDIGetDLFlag(ANSC_HANDLE hContext)
 
 ANSC_STATUS FwDlDmlDIGetFWVersion(ANSC_HANDLE hContext)
 {
-    PDEVICE_INFO      pMyObject    = (PDEVICE_INFO)hContext;
-    FILE *fp;
-    char buff[128]={0};
+    PDEVICE_INFO pMyObject = (PDEVICE_INFO) hContext;
 
-    if((fp = fopen("/version.txt", "r")) == NULL)
+    if (GetFirmwareName(pMyObject->Current_Firmware, sizeof(pMyObject->Current_Firmware)) != 0)
     {
-        CcspTraceError(("Error while opening the file version.txt \n"));
+        CcspTraceError(("GetFirmwareName() failed\n"));
         return ANSC_STATUS_FAILURE;
     }
-
-    while(fgets(buff, 128, fp) != NULL)
-    {
-        if(strstr(buff, "imagename") != NULL)
-        {
-            int i = 0;
-            while((i < sizeof(buff)-10) && (buff[i+10] != '\n') && (buff[i+10] != '\r') && (buff[i+10] != '\0'))
-            {
-                pMyObject->Current_Firmware[i] = buff[i+10];
-                i++;
-            }
-            pMyObject->Current_Firmware[i] = '\0';
-            break;
-        }
-    }
-
-    if(fp)
-        fclose(fp);
 
     CcspTraceInfo((" Current FW Version is %s \n", pMyObject->Current_Firmware));
     return ANSC_STATUS_SUCCESS;
