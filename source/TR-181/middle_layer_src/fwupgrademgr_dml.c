@@ -81,7 +81,7 @@ FirmwareUpgrade_GetParamStringValue
     PDEVICE_INFO pMyObject = (PDEVICE_INFO) g_pBEManager->pDeviceInfo;
 
     /* check the parameter name and return the corresponding value */
-    if( AnscEqualString(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadStatus", TRUE) )
+    if (strcmp(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadStatus") == 0)
     {
         if(pMyObject->Download_Control_Flag)
         {
@@ -98,7 +98,7 @@ FirmwareUpgrade_GetParamStringValue
         return 0;
     }
 
-    if( AnscEqualString(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadProtocol", TRUE) )
+    if (strcmp(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadProtocol") == 0)
     {
         if(pMyObject->Download_Control_Flag)
         {
@@ -115,7 +115,7 @@ FirmwareUpgrade_GetParamStringValue
         return 0;
     }
 
-    if( AnscEqualString(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadURL", TRUE) )
+    if (strcmp(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadURL") == 0)
     {
         if(pMyObject->Download_Control_Flag)
         {
@@ -131,7 +131,7 @@ FirmwareUpgrade_GetParamStringValue
         return 0;
     }
 
-    if( AnscEqualString(ParamName, "X_RDKCENTRAL-COM_FirmwareToDownload", TRUE) )
+    if (strcmp(ParamName, "X_RDKCENTRAL-COM_FirmwareToDownload") == 0)
     {
         if(pMyObject->Download_Control_Flag)
         {
@@ -179,7 +179,7 @@ FirmwareUpgrade_SetParamStringValue
 {
     PDEVICE_INFO pMyObject = (PDEVICE_INFO) g_pBEManager->pDeviceInfo;
     /* check the parameter name and set the corresponding value */
-    if( AnscEqualString(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadURL", TRUE))
+    if (strcmp(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadURL") == 0)
     {
         if(pMyObject->Download_Control_Flag)
         {
@@ -192,7 +192,7 @@ FirmwareUpgrade_SetParamStringValue
         return 1;
     }
 
-    if( AnscEqualString(ParamName, "X_RDKCENTRAL-COM_FirmwareToDownload", TRUE))
+    if (strcmp(ParamName, "X_RDKCENTRAL-COM_FirmwareToDownload") == 0)
     {
         if(pMyObject->Download_Control_Flag)
         {
@@ -205,7 +205,7 @@ FirmwareUpgrade_SetParamStringValue
         return 1;
     }
 
-   if( AnscEqualString(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadProtocol", TRUE))
+   if (strcmp(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadProtocol") == 0)
     {
         if(pMyObject->Download_Control_Flag)
         {
@@ -258,7 +258,7 @@ FirmwareUpgrade_GetParamBoolValue
 {
     PDEVICE_INFO pMyObject = (PDEVICE_INFO) g_pBEManager->pDeviceInfo;
     /* check the parameter name and return the corresponding value */
-    if( AnscEqualString(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadNow", TRUE) )
+    if (strcmp(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadNow") == 0)
     {
          if(pMyObject->Download_Control_Flag)
          {
@@ -306,7 +306,7 @@ FirmwareUpgrade_SetParamBoolValue
 {
     PDEVICE_INFO pMyObject = (PDEVICE_INFO) g_pBEManager->pDeviceInfo;
     /* check the parameter name and set the corresponding value */
-    if( AnscEqualString(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadNow", TRUE))
+    if (strcmp(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadNow") == 0)
     {
         if(pMyObject->Download_Control_Flag)
         {
@@ -360,7 +360,7 @@ FirmwareUpgrade_GetParamIntValue
 {
     PDEVICE_INFO pMyObject = (PDEVICE_INFO) g_pBEManager->pDeviceInfo;
     /* check the parameter name and return the corresponding value */
-    if( AnscEqualString(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadAndFactoryReset", TRUE) )
+    if (strcmp(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadAndFactoryReset") == 0)
     {
          if(pMyObject->Download_Control_Flag)
          {
@@ -409,7 +409,7 @@ FirmwareUpgrade_SetParamIntValue
 {
     PDEVICE_INFO pMyObject = (PDEVICE_INFO) g_pBEManager->pDeviceInfo;
     /* check the parameter name and set the corresponding value */
-    if( AnscEqualString(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadAndFactoryReset", TRUE))
+    if (strcmp(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadAndFactoryReset") == 0)
     {
         if(pMyObject->Download_Control_Flag)
         {
@@ -478,7 +478,7 @@ FirmwareUpgradeRPC_GetParamUlongValue
 {
 	PDEVICE_INFO pMyObject = (PDEVICE_INFO) g_pBEManager->pDeviceInfo;
     /* check the parameter name and return the corresponding value */
-    if( AnscEqualString(ParamName, "DeferFWDownloadReboot", TRUE))
+    if (strcmp(ParamName, "DeferFWDownloadReboot") == 0)
     {
         /* collect value */
         *puLong = pMyObject->DeferFWDownloadReboot;
@@ -528,7 +528,7 @@ FirmwareUpgradeRPC_SetParamUlongValue
 {
 	PDEVICE_INFO pMyObject = (PDEVICE_INFO) g_pBEManager->pDeviceInfo;
     /* check the parameter name and set the corresponding value */
-    if( AnscEqualString(ParamName, "DeferFWDownloadReboot", TRUE))
+    if (strcmp(ParamName, "DeferFWDownloadReboot") == 0)
     {
         /* collect value */
 		FwDlDmlDISetDeferFWDownloadReboot(&(pMyObject->DeferFWDownloadReboot), uValue);
