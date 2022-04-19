@@ -34,6 +34,7 @@
 
 #include "ssp_internal.h"
 #include "ssp_global.h"
+#include "dm_pack_create_func.h"
 
 PCOMPONENT_COMMON_PLATFORM_MANAGER       g_pComponentCommonFwUpgradeMgr = NULL;
 PCCSP_CCD_INTERFACE                      pSsdCcdIf                         = (PCCSP_CCD_INTERFACE) NULL;
@@ -42,9 +43,6 @@ PDSLH_CPE_CONTROLLER_OBJECT              pDslhCpeController                = NUL
 extern  ANSC_HANDLE                      bus_handle;
 extern char                              g_Subsystem[32];
 extern  ULONG                            g_ulAllocatedSizePeak;
-
-#define  DATAMODEL_XML_FILE           "/usr/rdk/fwupgrademanager/RdkFwUpgradeManager.xml"
-
 
 ANSC_STATUS ssp_create()
 {
@@ -156,11 +154,11 @@ ssp_engage
     }
 
     returnStatus =
-        pDslhCpeController->RegisterCcspDataModel
+        pDslhCpeController->RegisterCcspDataModel2
         (
          (ANSC_HANDLE)pDslhCpeController,
          CrName, /* CCSP_DBUS_INTERFACE_CR,*/              /* CCSP CR ID */
-         DATAMODEL_XML_FILE,             /* Data Model XML file. Can be empty if only base data model supported. */
+         DMPackCreateDataModelXML,                       /* Data Model XML file. Can be empty if only base data model supported. */
          RDK_COMPONENT_NAME_PLATFORM_MANAGER,            /* Component Name    */
          RDK_COMPONENT_VERSION_PLATFORM_MANAGER,         /* Component Version */
          RDK_COMPONENT_PATH_PLATFORM_MANAGER,            /* Component Path    */
