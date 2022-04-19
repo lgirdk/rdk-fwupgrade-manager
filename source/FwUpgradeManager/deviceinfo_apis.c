@@ -197,11 +197,11 @@ ANSC_STATUS FwDlDmlDIGetProtocol(ANSC_HANDLE hContext, char *Protocol)
 {
     PDEVICE_INFO     pMyObject = (PDEVICE_INFO)hContext;
 
-    if(strlen(pMyObject->DownloadURL) == 0)
+    if (strlen(pMyObject->DownloadURL) == 0)
         AnscCopyString(Protocol, "");
-    else if(AnscEqualString2(pMyObject->DownloadURL,"https", 5, FALSE))
+    else if (strncasecmp(pMyObject->DownloadURL, "https", 5) == 0)
         AnscCopyString(Protocol, "HTTPS");
-    else if(AnscEqualString2(pMyObject->DownloadURL,"http", 4, FALSE))
+    else if (strncasecmp(pMyObject->DownloadURL, "http", 4) == 0)
         AnscCopyString(Protocol, "HTTP");
     else
         AnscCopyString(Protocol, "INVALID");
