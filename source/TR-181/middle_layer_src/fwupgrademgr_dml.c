@@ -205,7 +205,7 @@ FirmwareUpgrade_SetParamStringValue
         return 1;
     }
 
-   if( AnscEqualString(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadProtocol", TRUE))
+   if (strcmp(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadProtocol") == 0)
     {
         if(pMyObject->Download_Control_Flag)
         {

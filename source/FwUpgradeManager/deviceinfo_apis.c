@@ -236,7 +236,7 @@ ANSC_STATUS FwDlDmlDIDownloadNow(ANSC_HANDLE hContext)
     if(strlen(pMyObject->Firmware_To_Download) && strlen(pMyObject->DownloadURL))
     {
         convert_to_validFW(pMyObject->Firmware_To_Download,valid_fw);
-        if(AnscEqualString(valid_fw, pMyObject->Current_Firmware, FALSE))
+        if (strcasecmp(valid_fw, pMyObject->Current_Firmware) == 0)
         {
             CcspTraceError((" Current FW is same, Ignoring request \n"));
             return ANSC_STATUS_FAILURE;
@@ -324,7 +324,7 @@ ANSC_STATUS FwDlDmlDIDownloadAndFactoryReset(ANSC_HANDLE hContext)
     if(strlen(pMyObject->Firmware_To_Download) && strlen(pMyObject->DownloadURL))
     {
         convert_to_validFW(pMyObject->Firmware_To_Download,valid_fw);
-        if(AnscEqualString(valid_fw, pMyObject->Current_Firmware, FALSE))
+        if (strcasecmp(valid_fw, pMyObject->Current_Firmware) == 0)
         {
             CcspTraceError((" Current FW is same, Ignoring request \n"));
             return ANSC_STATUS_FAILURE;
