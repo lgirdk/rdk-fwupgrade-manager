@@ -242,7 +242,6 @@ int main(int argc, char* argv[])
 #ifdef FEATURE_SUPPORT_RDKLOG
     RDK_LOGGER_INIT();
 #endif
-    syscfg_init();
 #ifdef FEATURE_RDKB_LED_MANAGER
     sysevent_fd =  sysevent_open(SYS_IP_ADDR, SE_SERVER_WELL_KNOWN_PORT, SE_VERSION, "fw_upgrade", &sysevent_token);
 #endif
