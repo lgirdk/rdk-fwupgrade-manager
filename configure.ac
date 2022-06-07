@@ -54,18 +54,6 @@ AC_ARG_ENABLE([notify],
            ],
 	 [echo "headless build is enable"])
 
-NONROOT_CFLAGS=" "
-AC_ARG_ENABLE([dropearly],
-        AS_HELP_STRING([--enable-dropearly],[enable dropearly]),
-        [
-          case "${enableval}" in
-           yes) NONROOT_CFLAGS="-DDROP_ROOT_EARLY" ;;
-            no) AC_MSG_NOTICE([dropearly is disabled]) ;;
-          *) AC_MSG_ERROR([bad value ${enableval} for --enable-dropearly ]) ;;
-           esac
-           ],
-         [echo "dropearly is enable"])
-
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h string.h unistd.h])
 
