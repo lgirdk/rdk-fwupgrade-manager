@@ -422,10 +422,41 @@ void FwDl_ThreadFunc()
     sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_DOWNLOAD_START_EVENT, 0);
 #endif
 #endif
+
+    syscfg_set_commit(NULL, "FWDWLD_status", "In Progress");
+
     ret = fwupgrade_hal_download ();
     if( ret == ANSC_STATUS_FAILURE)
     {
         CcspTraceError((" Failed to start download \n"));
+
+        dl_status = fwupgrade_hal_get_download_status();
+        if(dl_status == 109)
+        {
+            syscfg_set_commit(NULL, "FWDWLD_status", "Request Denied");
+        }
+        else if(dl_status == 122)
+        {
+            syscfg_set_commit(NULL, "FWDWLD_status", "File Not Available");
+        }
+        else if(dl_status == 101)
+        {
+            syscfg_set_commit(NULL, "FWDWLD_status", "Flash Error");
+        }
+        else if(dl_status == 102)
+        {
+            syscfg_set_commit(NULL, "FWDWLD_status", "Incorrect Signature");
+        }
+        else if(dl_status == 199)
+        {
+            syscfg_set_commit(NULL, "FWDWLD_status", "Retry");
+        }
+        else if((dl_status >= 400) || !(dl_status >= 0 && dl_status <= 100))
+        {
+            CcspTraceError((" FW DL is failed with status %d \n", dl_status));
+            syscfg_set_commit(NULL, "FWDWLD_status", "Failed");
+        }
+
 #if defined (FEATURE_RDKB_LED_MANAGER)
     /* Either image download or flashing failed. set previous state */
 #if defined (FEATURE_RDKB_LED_MANAGER_CAPTIVE_PORTAL)
@@ -451,7 +482,6 @@ void FwDl_ThreadFunc()
     }
 #endif
 #endif 
-        goto EXIT;
     }
     else
     {
@@ -480,7 +510,10 @@ void FwDl_ThreadFunc()
             if(dl_status >= 0 && dl_status <= 100)
                 sleep(2);
             else if(dl_status == 200)
+            {
+                syscfg_set_commit(NULL, "FWDWLD_status", "Completed");
                 break;
+            }
             else if(dl_status >= 400)
             {
                 CcspTraceError((" FW DL is failed with status %d \n", dl_status));
@@ -509,7 +542,7 @@ void FwDl_ThreadFunc()
                 }
 #endif
 #endif
-                goto EXIT;
+                syscfg_set_commit(NULL, "FWDWLD_status", "Failed");
             }
         }
 #if defined (FEATURE_RDKB_LED_MANAGER) 
@@ -540,21 +573,28 @@ void FwDl_ThreadFunc()
 #endif
         CcspTraceInfo((" FW DL is over \n"));
 
-        CcspTraceInfo((" Waiting for reboot ready ... \n"));
-        while(1)
+        if (dl_status == 200)
         {
-            ret = fwupgrade_hal_reboot_ready(&reboot_ready_status);
+            CcspTraceInfo((" Waiting for reboot ready ... \n"));
+            while (1)
+            {
+                ret = fwupgrade_hal_reboot_ready(&reboot_ready_status);
 
-            if(ret == ANSC_STATUS_SUCCESS && reboot_ready_status == 1)
-                break;
-            else
-                sleep(5);
+                if (ret == ANSC_STATUS_SUCCESS && reboot_ready_status == 1)
+                    break;
+                else
+                    sleep(5);
+            }
+            CcspTraceInfo((" Waiting for reboot ready over, setting last reboot reason \n"));
+
+            system("dmcli eRT setv Device.DeviceInfo.X_RDKCENTRAL-COM_LastRebootReason string Forced_Software_upgrade");	    
         }
-        CcspTraceInfo((" Waiting for reboot ready over, setting last reboot reason \n"));
+    }
 
-        system("dmcli eRT setv Device.DeviceInfo.X_RDKCENTRAL-COM_LastRebootReason string Forced_Software_upgrade");
+    ret = ANSC_STATUS_FAILURE;
 
-        ret = ANSC_STATUS_FAILURE;
+    if(dl_status != 199)
+    {
         ret = fwupgrade_hal_download_reboot_now();
 
         if(ret == ANSC_STATUS_SUCCESS)
@@ -644,7 +684,10 @@ void FwDlAndFR_ThreadFunc()
             if(dl_status >= 0 && dl_status <= 100)
                 sleep(2);
             else if(dl_status == 200)
+            {
+                syscfg_set_commit(NULL, "FWDWLD_status", "Completed");
                 break;
+            }
             else if(dl_status >= 400)
             {
                 CcspTraceError((" FW DL is failed with status %d \n", dl_status));
@@ -674,7 +717,7 @@ void FwDlAndFR_ThreadFunc()
                 }
 #endif
 #endif
-                goto EXIT;
+                syscfg_set_commit(NULL, "FWDWLD_status", "Failed");
             }
         }
 
@@ -704,16 +747,18 @@ void FwDlAndFR_ThreadFunc()
 #endif	
 #endif
 
-
-        CcspTraceInfo((" Waiting for reboot ready ... \n"));
-        while(1)
+        if (dl_status == 200)
         {
-            ret = fwupgrade_hal_reboot_ready(&reboot_ready_status);
+            CcspTraceInfo((" Waiting for reboot ready ... \n"));
+            while (1)
+            {
+                ret = fwupgrade_hal_reboot_ready(&reboot_ready_status);
 
-            if(ret == ANSC_STATUS_SUCCESS && reboot_ready_status == 1)
-                break;
-            else
-                sleep(5);
+                if (ret == ANSC_STATUS_SUCCESS && reboot_ready_status == 1)
+                    break;
+                else
+                    sleep(5);
+            }
         }
         CcspTraceInfo((" Waiting for reboot ready over, setting last reboot reason \n"));
 
