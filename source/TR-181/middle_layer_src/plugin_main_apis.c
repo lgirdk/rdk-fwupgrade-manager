@@ -177,6 +177,8 @@ BackEndManagerInitialize
     memset (pMyObject->pDeviceInfo, 0, sizeof(DEVICE_INFO));
     FwDlDmlDIGetDLFlag((ANSC_HANDLE) pMyObject->pDeviceInfo);
 
+    syscfg_set_commit(NULL, "FWDWLD_status", "Not Started");
+
     if(pMyObject->pDeviceInfo->Download_Control_Flag)
     {
         FwDlDmlDIGetFWVersion((ANSC_HANDLE)pMyObject->pDeviceInfo);
