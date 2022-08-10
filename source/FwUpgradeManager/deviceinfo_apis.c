@@ -387,25 +387,6 @@ ANSC_STATUS FwDlDmlDIDownloadAndFactoryReset(ANSC_HANDLE hContext)
     return ANSC_STATUS_SUCCESS;
 }
 
-
-ANSC_STATUS FwDlDmlDISetURL(ANSC_HANDLE hContext, char *URL)
-{
-    PDEVICE_INFO     pMyObject = (PDEVICE_INFO)hContext;
-
-    AnscCopyString(pMyObject->DownloadURL, URL);
-    CcspTraceInfo((" URL is %s \n", pMyObject->DownloadURL));
-    return ANSC_STATUS_SUCCESS;
-}
-
-ANSC_STATUS FwDlDmlDISetImage(ANSC_HANDLE hContext, char *Image)
-{
-    PDEVICE_INFO     pMyObject = (PDEVICE_INFO)hContext;
-
-    AnscCopyString(pMyObject->Firmware_To_Download, Image);
-    CcspTraceInfo((" FW DL is %s \n", pMyObject->Firmware_To_Download));
-    return ANSC_STATUS_SUCCESS;
-}
-
 void FwDl_ThreadFunc()
 {
     int dl_status = 0;
