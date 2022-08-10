@@ -178,34 +178,49 @@ FirmwareUpgrade_SetParamStringValue
     )
 {
     PDEVICE_INFO pMyObject = (PDEVICE_INFO) g_pBEManager->pDeviceInfo;
-    /* check the parameter name and set the corresponding value */
+
     if (strcmp(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadURL") == 0)
     {
-        if(pMyObject->Download_Control_Flag)
+        if (pMyObject->Download_Control_Flag)
         {
-            FwDlDmlDISetURL((ANSC_HANDLE)pMyObject, pString);
+            size_t len = strlen(pString);
+            if (len >= sizeof(pMyObject->DownloadURL))
+            {
+                return FALSE;
+            }
+
+            memcpy(pMyObject->DownloadURL, pString, len + 1);
+            CcspTraceInfo((" URL is %s\n", pString));
         }
         else
         {
             CcspTraceError(("FW DL is not allowed for this image type \n"));
         }
-        return 1;
+
+        return TRUE;
     }
 
     if (strcmp(ParamName, "X_RDKCENTRAL-COM_FirmwareToDownload") == 0)
     {
-        if(pMyObject->Download_Control_Flag)
+        if (pMyObject->Download_Control_Flag)
         {
-            FwDlDmlDISetImage((ANSC_HANDLE)pMyObject, pString);
+            size_t len = strlen(pString);
+            if (len >= sizeof(pMyObject->Firmware_To_Download))
+            {
+                return FALSE;
+            }
+
+            memcpy(pMyObject->Firmware_To_Download, pString, len + 1);
+            CcspTraceInfo((" FW DL is %s\n", pString));
         }
         else
         {
             CcspTraceError(("FW DL is not allowed for this image type \n"));
         }
-        return 1;
+        return TRUE;
     }
 
-    return 0;
+    return FALSE;
 }
 
 
