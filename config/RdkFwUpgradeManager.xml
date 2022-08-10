@@ -48,13 +48,13 @@
                     </parameter>
                     <parameter>
                         <name>X_RDKCENTRAL-COM_FirmwareDownloadURL</name>
-                        <type>string</type>
+                        <type>string(127)</type>
                         <syntax>string</syntax>
                         <writable>true</writable>
                     </parameter>
                     <parameter>
                         <name>X_RDKCENTRAL-COM_FirmwareToDownload</name>
-                        <type>string</type>
+                        <type>string(127)</type>
                         <syntax>string</syntax>
                         <writable>true</writable>
                     </parameter>
