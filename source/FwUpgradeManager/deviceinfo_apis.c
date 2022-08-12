@@ -548,6 +548,16 @@ EXIT:
 
 convert_to_validFW(char *fw,char *valid_fw)
 {
+    char *buff = NULL;
+    int buff_len = 0;
+
+#if defined(_LG_MV3_)
+    /* Valid FW names
+       xxxx.pkgtb
+     */
+    buff = strstr(fw,".pkgtb");
+
+#else
     /* Valid FW names
        xxxx_20170717081507sdy
        xxxx_20170717081507sdy.bin
@@ -555,12 +565,10 @@ convert_to_validFW(char *fw,char *valid_fw)
        xxxx_20170717081507sdy_signed.bin.ccs
      */
 
-    char *buff = NULL;
-    int buff_len = 0;
-
     if(buff = strstr(fw,"_signed"));
     else if(buff = strstr(fw,"-signed"));
     else if(buff = strstr(fw,"."));
+#endif
 
     if(buff)
         buff_len = strlen(buff);
