@@ -329,7 +329,27 @@ void FwDl_ThreadFunc()
     {
         CcspTraceError((" Failed to start download \n"));
         dl_status = fwupgrade_hal_get_download_status();
-        if(dl_status >= 400)
+        if(dl_status == 109)
+        {
+            syscfg_set_commit(NULL, "FWDWLD_status", "Request Denied");
+        }
+        else if(dl_status == 122)
+        {
+            syscfg_set_commit(NULL, "FWDWLD_status", "File Not Available");
+        }
+        else if(dl_status == 101)
+        {
+            syscfg_set_commit(NULL, "FWDWLD_status", "Flash Error");
+        }
+        else if(dl_status == 102)
+        {
+            syscfg_set_commit(NULL, "FWDWLD_status", "Incorrect Signature");
+        }
+        else if(dl_status == 199)
+        {
+            syscfg_set_commit(NULL, "FWDWLD_status", "Retry");
+        }
+        else if((dl_status >= 400) || !(dl_status >= 0 && dl_status <= 100))
         {
             CcspTraceError((" FW DL is failed with status %d \n", dl_status));
             syscfg_set_commit(NULL, "FWDWLD_status", "Failed");
