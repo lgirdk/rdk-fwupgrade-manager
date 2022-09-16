@@ -32,12 +32,73 @@
  * limitations under the License.
 */
 
+#include <string.h>
+#include <arpa/inet.h>
+
 #include "plugin_main_apis.h"
 #include "fwupgrademgr_dml.h"
 #include "ssp_global.h"
 
 extern PBACKEND_MANAGER_OBJECT               g_pBEManager;
 
+static int valid_url (char *buf)
+{
+    if (strncasecmp(buf, "http://", 7) == 0)
+        buf += 7;
+    else if (strncasecmp(buf, "https://", 8) == 0)
+        buf += 8;
+    else
+        return -1;
+
+    if (*buf == '[')
+    {
+        char buffer[INET6_ADDRSTRLEN];
+        char *pos;
+        size_t len;
+        struct in6_addr addr6;
+
+        buf++;
+        pos = strchr(buf, ']');
+        if (pos == NULL)
+        {
+            return -1;
+        }
+
+        len = pos - buf;
+        if ((len < 3) || (len >= sizeof(buffer)))
+        {
+            return -1;
+        }
+
+        memcpy(buffer, buf, len);
+        buffer[len] = 0;
+        if (inet_pton(AF_INET6, buffer, &addr6) != 1)
+        {
+            return -1;
+        }
+
+        buf = pos + 1;
+    }
+
+    while (*buf != 0) {
+        // Allowing only integers, alphabets (lower and upper) and certain special characters
+        if (((*buf >= '-') && (*buf <= ':')) ||
+            ((*buf >= 'A') && (*buf <= 'Z')) ||
+            ((*buf >= 'a') && (*buf <= 'z')) ||
+             (*buf == '#') ||
+             (*buf == '@') ||
+             (*buf == '_') ||
+             (*buf == '~'))
+        {
+            buf++;
+            continue;
+        }
+
+        return -1;
+    }
+
+    return 0;
+}
 
 /**********************************************************************  
     caller:     owner of this object 
@@ -185,6 +246,10 @@ FirmwareUpgrade_SetParamStringValue
         {
             size_t len = strlen(pString);
             if (len >= sizeof(pMyObject->DownloadURL))
+            {
+                return FALSE;
+            }
+            if (valid_url(pString) != 0)
             {
                 return FALSE;
             }
