@@ -38,6 +38,33 @@
 
 extern PBACKEND_MANAGER_OBJECT               g_pBEManager;
 
+static int valid_url (char *buf)
+{
+    if (strncasecmp(buf, "http://", 7) == 0)
+        buf += 7;
+    else if (strncasecmp(buf, "https://", 8) == 0)
+        buf += 8;
+    else
+        return -1;
+
+    while (*buf != 0) {
+        // Allowing only integers, alphabets (lower and upper) and certain special characters
+        if (((*buf >= '-') && (*buf <= ':')) ||
+            ((*buf >= 'A') && (*buf <= 'Z')) ||
+            ((*buf >= 'a') && (*buf <= 'z')) ||
+             (*buf == '#') ||
+             (*buf == '@') ||
+             (*buf == '~'))
+        {
+            buf++;
+            continue;
+        }
+
+        return -1;
+    }
+
+    return 0;
+}
 
 /**********************************************************************  
     caller:     owner of this object 
@@ -185,6 +212,10 @@ FirmwareUpgrade_SetParamStringValue
         {
             size_t len = strlen(pString);
             if (len >= sizeof(pMyObject->DownloadURL))
+            {
+                return FALSE;
+            }
+            if (valid_url(pString) != 0)
             {
                 return FALSE;
             }
