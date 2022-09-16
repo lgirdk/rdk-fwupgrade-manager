@@ -54,6 +54,7 @@ static int valid_url (char *buf)
             ((*buf >= 'a') && (*buf <= 'z')) ||
              (*buf == '#') ||
              (*buf == '@') ||
+             (*buf == '_') ||
              (*buf == '~'))
         {
             buf++;
