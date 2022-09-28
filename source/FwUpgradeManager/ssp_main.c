@@ -241,17 +241,22 @@ int main(int argc, char* argv[])
     RDK_LOGGER_INIT();
 #endif
     syscfg_init();
-    syscfg_get( NULL, "NonRootSupport", buf, sizeof(buf));
 #ifdef FEATURE_RDKB_LED_MANAGER
     sysevent_fd =  sysevent_open(SYS_IP_ADDR, SE_SERVER_WELL_KNOWN_PORT, SE_VERSION, "fw_upgrade", &sysevent_token);
 #endif
-    if( buf != NULL )  {
-        if (strncmp(buf, "true", strlen("true")) == 0) {
-            init_capability();
-            drop_root_caps(&appcaps);
-            update_process_caps(&appcaps);
-            read_capability(&appcaps);
-        }
+    bool blocklist_ret = false;
+    blocklist_ret = isBlocklisted();
+    if(blocklist_ret)
+    {
+        CcspTraceInfo(("NonRoot feature is disabled\n"));
+    }
+    else
+    {
+        CcspTraceInfo(("NonRoot feature is enabled, dropping root privileges for RdkInterDeviceManager Process\n"));
+        init_capability();
+        drop_root_caps(&appcaps);
+        update_process_caps(&appcaps);
+        read_capability(&appcaps);
     }
 
     for(idx = 1; idx < argc; idx++)
