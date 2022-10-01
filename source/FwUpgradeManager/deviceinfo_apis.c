@@ -432,9 +432,8 @@ void FwDl_ThreadFunc()
             CcspTraceInfo((" Waiting for reboot ready over, setting last reboot reason \n"));
         }
 
-        system("dmcli eRT setv Device.DeviceInfo.X_RDKCENTRAL-COM_LastRebootReason string Forced_Software_upgrade");
-
     }
+    system("dmcli eRT setv Device.DeviceInfo.X_RDKCENTRAL-COM_LastRebootReason string Forced_Software_upgrade");
     ret = ANSC_STATUS_FAILURE;
     ret = fwupgrade_hal_download_reboot_now();
 
