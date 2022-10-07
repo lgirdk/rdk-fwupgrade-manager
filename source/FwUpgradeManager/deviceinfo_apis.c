@@ -56,7 +56,7 @@ extern token_t sysevent_token;
 
 extern cap_user appcaps;
 
-static char valid_fw[128];
+static char valid_fw[256 + 1];
 
 ANSC_STATUS FwDlDmlDIGetDLFlag(ANSC_HANDLE hContext)
 {
