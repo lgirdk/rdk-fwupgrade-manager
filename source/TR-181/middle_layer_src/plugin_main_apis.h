@@ -74,9 +74,9 @@ typedef struct
 _DEVICE_INFO
 {
     BOOL            Download_Control_Flag;
-    char            Current_Firmware[128];
-    char            Firmware_To_Download[128];
-    char            DownloadURL[128];
+    char            Current_Firmware[256 + 1];
+    char            Firmware_To_Download[256 + 1];
+    char            DownloadURL[256 + 1];
     ULONG           DeferFWDownloadReboot;
 } 
 DEVICE_INFO, *PDEVICE_INFO;
