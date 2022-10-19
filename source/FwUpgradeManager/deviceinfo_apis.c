@@ -435,15 +435,19 @@ void FwDl_ThreadFunc()
     }
     system("dmcli eRT setv Device.DeviceInfo.X_RDKCENTRAL-COM_LastRebootReason string Forced_Software_upgrade");
     ret = ANSC_STATUS_FAILURE;
-    ret = fwupgrade_hal_download_reboot_now();
 
-    if(ret == ANSC_STATUS_SUCCESS)
+    if(dl_status != 199)
     {
-        CcspTraceInfo((" Rebooting the device now!\n"));
-    }
-    else
-    {
-        CcspTraceError((" Reboot Already in progress!\n"));
+        ret = fwupgrade_hal_download_reboot_now();
+
+        if(ret == ANSC_STATUS_SUCCESS)
+        {
+            CcspTraceInfo((" Rebooting the device now!\n"));
+        }
+        else
+        {
+            CcspTraceError((" Reboot Already in progress!\n"));
+        }
     }
 
 EXIT:
