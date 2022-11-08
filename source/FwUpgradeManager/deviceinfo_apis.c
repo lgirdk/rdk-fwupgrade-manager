@@ -179,7 +179,7 @@ ANSC_STATUS FwDlDmlDIGetDLStatus(ANSC_HANDLE hContext, char *DL_Status)
     int dl_status = 0;
 
     dl_status = fwupgrade_hal_get_download_status();
-    CcspTraceInfo((" Download status is %d \n", dl_status));
+    CcspTraceDebug((" Download status is %d \n", dl_status));
 
     if(dl_status == 0)
         AnscCopyString(DL_Status, "Not Started");
