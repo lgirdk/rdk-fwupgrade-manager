@@ -404,6 +404,7 @@ void FwDl_ThreadFunc()
     if(fp != NULL)
 	    led_disable = true;
 #endif 
+    cap_user app_caps;
 
     pthread_detach(pthread_self());
     CcspTraceInfo(("Gaining root permission to download and write the code to flash \n"));
@@ -569,8 +570,11 @@ void FwDl_ThreadFunc()
 EXIT:
     CcspTraceInfo(("Dropping root permission...\n"));
     init_capability();
-    drop_root_caps(&appcaps);
-    update_process_caps(&appcaps);
+    app_caps.caps = NULL;
+    app_caps.user_name = NULL;
+    drop_root_caps(&app_caps);
+    update_process_caps(&app_caps);
+    read_capability(&app_caps);
 #if defined (FEATURE_RDKB_LED_MANAGER_CAPTIVE_PORTAL)
 if (led_disable == true) {
     fclose(fp);
