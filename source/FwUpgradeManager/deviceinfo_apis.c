@@ -316,6 +316,9 @@ void FwDl_ThreadFunc()
     int dl_status = 0;
     int ret = ANSC_STATUS_FAILURE;
     ULONG reboot_ready_status = 0;
+    cap_user app_caps;
+    app_caps.caps = NULL;
+    app_caps.user_name = NULL;
 
     pthread_detach(pthread_self());
     CcspTraceInfo(("Gaining root permission to download and write the code to flash \n"));
@@ -453,8 +456,9 @@ void FwDl_ThreadFunc()
 EXIT:
     CcspTraceInfo(("Dropping root permission...\n"));
     init_capability();
-    drop_root_caps(&appcaps);
-    update_process_caps(&appcaps);
+    drop_root_caps(&app_caps);
+    update_process_caps(&app_caps);
+    read_capability(&app_caps);
 }
 
 void FwDlAndFR_ThreadFunc()
