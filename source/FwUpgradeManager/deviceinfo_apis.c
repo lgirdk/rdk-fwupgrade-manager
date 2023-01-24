@@ -575,14 +575,17 @@ convert_to_validFW(char *fw,char *valid_fw)
        xxxx_20170717081507sdy.bin
        xxxx_20170717081507sdy_signed.bin
        xxxx_20170717081507sdy_signed.bin.ccs
+       xxxx_20230114003136sdy_GRT.bin
+       xxxx_6.0s11_DEV_sey
      */
 
     char *buff = NULL;
     int buff_len = 0;
 
+    // if the sw to be updated has no "_signed/-signed/.bin" extensions, take it as it is
     if(buff = strstr(fw,"_signed"));
     else if(buff = strstr(fw,"-signed"));
-    else if(buff = strstr(fw,"."));
+    else if(buff = strstr(fw,".bin"));
 
     if(buff)
         buff_len = strlen(buff);
