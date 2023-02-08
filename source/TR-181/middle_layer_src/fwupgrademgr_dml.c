@@ -339,6 +339,7 @@ FirmwareUpgrade_SetParamBoolValue
     )
 {
     PDEVICE_INFO pMyObject = (PDEVICE_INFO) g_pBEManager->pDeviceInfo;
+    BOOL  retValue = FALSE;
     /* check the parameter name and set the corresponding value */
     if (strcmp(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadNow") == 0)
     {
@@ -346,16 +347,22 @@ FirmwareUpgrade_SetParamBoolValue
         {
             if(bValue)
             {
-                FwDlDmlDIDownloadNow((ANSC_HANDLE)pMyObject);
+               if(FwDlDmlDIDownloadNow((ANSC_HANDLE)pMyObject) == ANSC_STATUS_SUCCESS)
+               {
+                   retValue = TRUE;
+               }
+               else
+               {
+                   CcspTraceError(("FwDlDmlDIDownloadNow failed\n"));
+               }
             }
         }
         else
         {
             CcspTraceError(("FW DL is not allowed for this image type \n"));
         }
-        return 1;
     }
-    return 0;
+    return retValue;
 }
 
 /**********************************************************************
