@@ -137,24 +137,15 @@ FirmwareUpgrade_GetParamStringValue
         ULONG*                      pUlSize
     )
 {
-    char DL_Status[128]={0};
     char Protocol[16]={0};
     PDEVICE_INFO pMyObject = (PDEVICE_INFO) g_pBEManager->pDeviceInfo;
 
     /* check the parameter name and return the corresponding value */
     if (strcmp(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadStatus") == 0)
     {
-        if(pMyObject->Download_Control_Flag)
+        if (pMyObject->Download_Control_Flag)
         {
-            /* collect value */
-            FwDlDmlDIGetDLStatus((ANSC_HANDLE)pMyObject, DL_Status);
-            if ( strlen(DL_Status) >= *pUlSize )
-            {
-                *pUlSize = strlen(DL_Status);
-                return 1;
-            }
-
-            AnscCopyString(pValue, DL_Status);
+            FwDlDmlDIGetDLStatus((ANSC_HANDLE)pMyObject, pValue, *pUlSize);
         }
         return 0;
     }
