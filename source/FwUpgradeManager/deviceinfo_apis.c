@@ -52,6 +52,9 @@ extern token_t sysevent_token;
 
 extern cap_user appcaps;
 
+extern char g_Subsystem[32];
+extern ANSC_HANDLE bus_handle;
+
 static char valid_fw[256 + 1];
 
 ANSC_STATUS FwDlDmlDIGetDLFlag(ANSC_HANDLE hContext)
@@ -100,21 +103,11 @@ ANSC_STATUS FwDlDmlDIGetFWVersion(ANSC_HANDLE hContext)
 }
 
 
-ANSC_STATUS FwDlDmlDIGetDLStatus(ANSC_HANDLE hContext, char *DL_Status)
+ANSC_STATUS FwDlDmlDIGetDLStatus(ANSC_HANDLE hContext, char *DL_Status, size_t len)
 {
-    int dl_status = 0;
+    syscfg_get(NULL, "FWDWLD_status", DL_Status, len);
 
-    dl_status = fwupgrade_hal_get_download_status();
-    CcspTraceDebug((" Download status is %d \n", dl_status));
-
-    if(dl_status == 0)
-        AnscCopyString(DL_Status, "Not Started");
-    else if(dl_status > 0 && dl_status <= 100)
-        AnscCopyString(DL_Status, "In Progress");
-    else if(dl_status == 200)
-        AnscCopyString(DL_Status, "Completed");
-    else if(dl_status >= 400)
-        AnscCopyString(DL_Status, "Failed");
+    CcspTraceDebug((" Download status is %s\n", DL_Status));
 
     return ANSC_STATUS_SUCCESS;
 }
@@ -311,6 +304,31 @@ ANSC_STATUS FwDlDmlDIDownloadAndFactoryReset(ANSC_HANDLE hContext)
     return ANSC_STATUS_SUCCESS;
 }
 
+static void SaveTCintoPSM(void)
+{
+    int retPsmGet = CCSP_SUCCESS;	
+    char *param_value = NULL;
+
+    retPsmGet = PSM_Get_Record_Value2(bus_handle,g_Subsystem, "CommandKey", NULL, &param_value);
+
+    if (retPsmGet == CCSP_SUCCESS)
+    {	    
+        PSM_Set_Record_Value2(bus_handle,g_Subsystem, "eRT.com.cisco.spvtg.ccsp.tr069pa.Undelivered_TC.1.CommandKey", ccsp_string, param_value);
+
+        if (param_value)
+        {
+            AnscFreeMemory(param_value);
+        }   
+        PSM_Del_Record(bus_handle, g_Subsystem, "CommandKey");
+    }
+    else
+    {
+        PSM_Set_Record_Value2(bus_handle,g_Subsystem, "eRT.com.cisco.spvtg.ccsp.tr069pa.Undelivered_TC.1.CommandKey", ccsp_string, "");
+    }	
+
+    PSM_Set_Record_Value2(bus_handle,g_Subsystem, "eRT.com.cisco.spvtg.ccsp.tr069pa.Undelivered_TC.1.IsDownload", ccsp_boolean, "1");
+}	
+
 void FwDl_ThreadFunc()
 {
     int dl_status = 0;
@@ -319,6 +337,7 @@ void FwDl_ThreadFunc()
     cap_user app_caps;
     app_caps.caps = NULL;
     app_caps.user_name = NULL;
+    char sysbuf[16];
 
     pthread_detach(pthread_self());
     CcspTraceInfo(("Gaining root permission to download and write the code to flash \n"));
@@ -425,6 +444,10 @@ void FwDl_ThreadFunc()
         if (dl_status == 200)
         {
             CcspTraceInfo((" Waiting for reboot ready ... \n"));
+
+            /* Save Transfer complete in PSM for download RPC success scenario */
+            SaveTCintoPSM();	    
+
             while (1)
             {
                 ret = fwupgrade_hal_reboot_ready(&reboot_ready_status);
@@ -442,7 +465,10 @@ void FwDl_ThreadFunc()
 
     ret = ANSC_STATUS_FAILURE;
 
-    if(dl_status != 199)
+    syscfg_get(NULL, "FWDWLD_status", sysbuf, sizeof(sysbuf));
+    CcspTraceInfo(("Firmware download status - %s\n", sysbuf));
+
+    if (dl_status == 200)
     {
         ret = fwupgrade_hal_download_reboot_now();
 
