@@ -40,7 +40,7 @@
 
 ANSC_STATUS FwDlDmlDIGetDLFlag(ANSC_HANDLE hContext);
 ANSC_STATUS FwDlDmlDIGetFWVersion(ANSC_HANDLE hContext);
-ANSC_STATUS FwDlDmlDIGetDLStatus(ANSC_HANDLE hContext, char *DL_Status);
+ANSC_STATUS FwDlDmlDIGetDLStatus(ANSC_HANDLE hContext, char *DL_Status, size_t len);
 ANSC_STATUS FwDlDmlDIGetProtocol(ANSC_HANDLE hContext, char *Protocol);
 ANSC_STATUS FwDlDmlDIDownloadNow(ANSC_HANDLE hContext);
 ANSC_STATUS FwDlDmlDIDownloadAndFactoryReset(ANSC_HANDLE hContext);
