@@ -36,7 +36,7 @@
 #include "ssp_global.h"
 #include "fwupgrade_hal.h"
 #include "cap.h"
-#include <syscfg.h>
+#include <syscfg/syscfg.h>
 #ifdef FEATURE_RDKB_LED_MANAGER
 #include <sysevent/sysevent.h>
 extern int sysevent_fd ;
