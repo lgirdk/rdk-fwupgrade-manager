@@ -103,7 +103,7 @@ FirmwareUpgrade_GetParamStringValue
         if(pMyObject->Download_Control_Flag)
         {
             /* collect value */
-            FwDlDmlDIGetProtocol((ANSC_HANDLE)pMyObject, Protocol);
+            FwDlDmlDIGetProtocol(Protocol);
             if ( strlen(Protocol) >= *pUlSize )
             {
                 *pUlSize = strlen(Protocol);
@@ -204,6 +204,20 @@ FirmwareUpgrade_SetParamStringValue
         }
         return 1;
     }
+
+   if( AnscEqualString(ParamName, "X_RDKCENTRAL-COM_FirmwareDownloadProtocol", TRUE))
+    {
+        if(pMyObject->Download_Control_Flag)
+        {
+            FwDlDmlDISetProtocol(pString);
+        }
+        else
+        {
+            CcspTraceError(("FW DL is not allowed for this image type \n"));
+        }
+        return 1;
+    }
+
     return 0;
 }
 

@@ -181,6 +181,8 @@ BackEndManagerInitialize
     {
         FwDlDmlDIGetFWVersion((ANSC_HANDLE)pMyObject->pDeviceInfo);
         FwDlDmlDIGetDeferFWDownloadReboot(&pMyObject->pDeviceInfo->DeferFWDownloadReboot);
+        FwDmlDIGetImage((ANSC_HANDLE)pMyObject->pDeviceInfo);
+        FwDmlDIGetURL((ANSC_HANDLE)pMyObject->pDeviceInfo);
     }
 
     return ANSC_STATUS_SUCCESS;
