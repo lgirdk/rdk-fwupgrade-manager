@@ -456,6 +456,7 @@ void FwDl_ThreadFunc()
                     sleep(5);
             }
             CcspTraceInfo((" Waiting for reboot ready over, setting last reboot reason \n"));
+            syscfg_set_commit(NULL, "FWDWLD_status", "Not Started");
         }
 
     }
