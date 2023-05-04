@@ -457,10 +457,10 @@ void FwDl_ThreadFunc()
             }
             CcspTraceInfo((" Waiting for reboot ready over, setting last reboot reason \n"));
             syscfg_set_commit(NULL, "FWDWLD_status", "Not Started");
+            system("dmcli eRT setv Device.DeviceInfo.X_RDKCENTRAL-COM_LastRebootReason string Forced_Software_upgrade");	    
         }
 
     }
-    system("dmcli eRT setv Device.DeviceInfo.X_RDKCENTRAL-COM_LastRebootReason string Forced_Software_upgrade");
     ret = ANSC_STATUS_FAILURE;
 
     syscfg_get(NULL, "FWDWLD_status", sysbuf, sizeof(sysbuf));
