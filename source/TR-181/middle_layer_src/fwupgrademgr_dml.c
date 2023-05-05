@@ -32,21 +32,17 @@
  * limitations under the License.
 */
 
+#include <string.h>
+#include <arpa/inet.h>
+
 #include "plugin_main_apis.h"
 #include "fwupgrademgr_dml.h"
 #include "ssp_global.h"
-#include <arpa/inet.h>
 
 extern PBACKEND_MANAGER_OBJECT               g_pBEManager;
 
 static int valid_url (char *buf)
 {
-    char buffer[128];
-    char *pos = NULL;
-    size_t len;
-    struct sockaddr_in sa;
-    struct sockaddr_in6 sa6;
-
     if (strncasecmp(buf, "http://", 7) == 0)
         buf += 7;
     else if (strncasecmp(buf, "https://", 8) == 0)
@@ -56,29 +52,33 @@ static int valid_url (char *buf)
 
     if (*buf == '[')
     {
+        char buffer[INET6_ADDRSTRLEN];
+        char *pos;
+        size_t len;
+        struct in6_addr addr6;
+
         buf++;
-        pos = strchr(buf,']');
-        if (pos)
-        {
-            len = pos - buf;
-            strncpy(buffer,buf,len);
-            buffer[len] = 0;
-            buf = buf + len;
-            if (inet_pton(AF_INET6, buffer, &(sa6.sin6_addr)) == 1)
-            {
-                buf++;
-            }
-            else
-            {
-                return -1;
-            }
-        }
-        else
+        pos = strchr(buf, ']');
+        if (pos == NULL)
         {
             return -1;
         }
-    }
 
+        len = pos - buf;
+        if ((len < 3) || (len >= sizeof(buffer)))
+        {
+            return -1;
+        }
+
+        memcpy(buffer, buf, len);
+        buffer[len] = 0;
+        if (inet_pton(AF_INET6, buffer, &addr6) != 1)
+        {
+            return -1;
+        }
+
+        buf = pos + 1;
+    }
 
     while (*buf != 0) {
         // Allowing only integers, alphabets (lower and upper) and certain special characters
