@@ -49,7 +49,6 @@ extern token_t sysevent_token;
 #define FW_UPDATE_STOP_EVENT "rdkb_fwupdate_stop"
 #define FW_UPDATE_COMPLETE_EVENT "rdkb_fwupdate_complete"
 #endif
-#define MAX_PROTOCOL  16
 
 extern cap_user appcaps;
 
@@ -194,31 +193,20 @@ ANSC_STATUS FwDlDmlDIGetDLStatus(ANSC_HANDLE hContext, char *DL_Status)
     return ANSC_STATUS_SUCCESS;
 }
 
-ANSC_STATUS FwDlDmlDIGetProtocol(char *Protocol)
+ANSC_STATUS FwDlDmlDIGetProtocol(ANSC_HANDLE hContext, char *Protocol)
 {
-    errno_t rc = -1;
-    char buf[64]={0};
-    if(syscfg_get( NULL, "fw_dl_protocol", buf, sizeof(buf)) == 0)
-    {
-        rc = strncpy(Protocol, buf, MAX_PROTOCOL - 1);
-    }
-    if(rc != EOK)
-    {
-        ERR_CHK(rc);
-        return ANSC_STATUS_FAILURE;
-    }
+    PDEVICE_INFO     pMyObject = (PDEVICE_INFO)hContext;
+
+    if(strlen(pMyObject->DownloadURL) == 0)
+        AnscCopyString(Protocol, "");
+    else if(AnscEqualString2(pMyObject->DownloadURL,"https", 5, FALSE))
+        AnscCopyString(Protocol, "HTTPS");
+    else if(AnscEqualString2(pMyObject->DownloadURL,"http", 4, FALSE))
+        AnscCopyString(Protocol, "HTTP");
+    else
+        AnscCopyString(Protocol, "INVALID");
 
     CcspTraceInfo((" Download Protocol is %s \n", Protocol));
-    return ANSC_STATUS_SUCCESS;
-}
-
-ANSC_STATUS FwDlDmlDISetProtocol(char *Protocol)
-{
-    if(syscfg_set_commit(NULL, "fw_dl_protocol", Protocol) != 0)
-    {
-        CcspTraceWarning(("%s: syscfg_set failed \n", __FUNCTION__));
-        return ANSC_STATUS_FAILURE;
-    }
 
     return ANSC_STATUS_SUCCESS;
 }
@@ -399,58 +387,12 @@ ANSC_STATUS FwDlDmlDIDownloadAndFactoryReset(ANSC_HANDLE hContext)
     return ANSC_STATUS_SUCCESS;
 }
 
-ANSC_STATUS FwDmlDIGetURL(ANSC_HANDLE hContext)
-{
-    PDEVICE_INFO     pMyObject = (PDEVICE_INFO)hContext;
-    if(syscfg_get(NULL,"xconf_url",pMyObject->DownloadURL,128) == 0)
-    {
-        return ANSC_STATUS_SUCCESS;
-    }
-    return ANSC_STATUS_FAILURE;
-}
-
-ANSC_STATUS FwDmlDIGetImage(ANSC_HANDLE hContext)
-{
-    PDEVICE_INFO     pMyObject = (PDEVICE_INFO)hContext;
-    char Last_reboot_reason[14]={0};
-    errno_t rc = -1;
-    //On Factory reset Syscfg values will be empty. So sync fw_to_upgrade with current image version
-    if(syscfg_get(NULL,"X_RDKCENTRAL-COM_LastRebootReason",Last_reboot_reason,14) == 0)
-    {
-        if (strcmp(Last_reboot_reason, "factory-reset") == 0)
-        {
-            rc = strncpy(pMyObject->Firmware_To_Download, pMyObject->Current_Firmware, 127);
-            if(rc != EOK)
-            {
-                ERR_CHK(rc);
-                return ANSC_STATUS_FAILURE;
-            }
-            if(syscfg_set_commit(NULL, "fw_to_upgrade", pMyObject->Firmware_To_Download) != 0)
-            {
-                CcspTraceWarning(("%s: syscfg_set failed \n", __FUNCTION__));
-            }
-            return ANSC_STATUS_SUCCESS;
-        }
-        else
-        {
-            if(syscfg_get(NULL,"fw_to_upgrade",pMyObject->Firmware_To_Download,128) == 0)
-            {
-                return ANSC_STATUS_SUCCESS;
-            }
-        }
-    }
-    return ANSC_STATUS_FAILURE;
-}
 
 ANSC_STATUS FwDlDmlDISetURL(ANSC_HANDLE hContext, char *URL)
 {
     PDEVICE_INFO     pMyObject = (PDEVICE_INFO)hContext;
 
     AnscCopyString(pMyObject->DownloadURL, URL);
-    if(syscfg_set_commit(NULL, "xconf_url",pMyObject->DownloadURL) != 0)
-    {
-        CcspTraceWarning(("%s: syscfg_set failed \n", __FUNCTION__));
-    }
     CcspTraceInfo((" URL is %s \n", pMyObject->DownloadURL));
     return ANSC_STATUS_SUCCESS;
 }
@@ -460,12 +402,6 @@ ANSC_STATUS FwDlDmlDISetImage(ANSC_HANDLE hContext, char *Image)
     PDEVICE_INFO     pMyObject = (PDEVICE_INFO)hContext;
 
     AnscCopyString(pMyObject->Firmware_To_Download, Image);
-
-    if(syscfg_set_commit(NULL, "fw_to_upgrade", pMyObject->Firmware_To_Download) != 0)
-    {
-        CcspTraceWarning(("%s: syscfg_set failed \n", __FUNCTION__));
-    }
-
     CcspTraceInfo((" FW DL is %s \n", pMyObject->Firmware_To_Download));
     return ANSC_STATUS_SUCCESS;
 }
