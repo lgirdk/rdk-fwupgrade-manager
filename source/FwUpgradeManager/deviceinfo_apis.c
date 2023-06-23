@@ -346,6 +346,7 @@ void FwDl_ThreadFunc()
 #ifdef FEATURE_RDKB_LED_MANAGER
     sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_DOWNLOAD_START_EVENT, 0);
 #endif
+    syscfg_set_commit(NULL, "FWDWLD_status", "In Progress");
     ret = fwupgrade_hal_download ();
     if( ret == ANSC_STATUS_FAILURE)
     {
@@ -456,7 +457,6 @@ void FwDl_ThreadFunc()
                     sleep(5);
             }
             CcspTraceInfo((" Waiting for reboot ready over, setting last reboot reason \n"));
-            syscfg_set_commit(NULL, "FWDWLD_status", "Not Started");
             system("dmcli eRT setv Device.DeviceInfo.X_RDKCENTRAL-COM_LastRebootReason string Forced_Software_upgrade");	    
         }
 
