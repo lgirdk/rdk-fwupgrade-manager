@@ -183,7 +183,11 @@ FirmwareUpgrade_SetParamStringValue
     {
         if(pMyObject->Download_Control_Flag)
         {
-            FwDlDmlDISetURL((ANSC_HANDLE)pMyObject, pString);
+            if(FwDlDmlDISetURL((ANSC_HANDLE)pMyObject, pString) == ANSC_STATUS_BAD_SIZE)
+            {
+                CcspTraceError(("X_RDKCENTRAL-COM_FirmwareDownloadURL string is too long\n"));
+                return 0;
+            }
         }
         else
         {
@@ -196,7 +200,11 @@ FirmwareUpgrade_SetParamStringValue
     {
         if(pMyObject->Download_Control_Flag)
         {
-            FwDlDmlDISetImage((ANSC_HANDLE)pMyObject, pString);
+            if(FwDlDmlDISetImage((ANSC_HANDLE)pMyObject, pString) == ANSC_STATUS_BAD_SIZE)
+            {
+                CcspTraceError(("X_RDKCENTRAL-COM_COM_FirmwareToDownload string is too long\n"));
+                return 0;
+            }
         }
         else
         {
