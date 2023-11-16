@@ -39,6 +39,7 @@
 #include "fwupgrade_hal.h"
 #include "cap.h"
 #include <syscfg/syscfg.h>
+#include <ccsp_syslog.h>
 #ifdef FEATURE_RDKB_LED_MANAGER
 #include <sysevent/sysevent.h>
 extern int sysevent_fd ;
@@ -145,6 +146,9 @@ ANSC_STATUS FwDlDmlDIDownloadNow(ANSC_HANDLE hContext)
         if (strcasecmp(valid_fw, pMyObject->Current_Firmware) == 0)
         {
             CcspTraceError((" Current FW is same, Ignoring request \n"));
+#if defined(FEATURE_NETWORK_LOGS)
+            syslog_networklog("NETWORK",LOG_NOTICE,"%s","Current FW is same, Ignoring request");
+#endif
             return ANSC_STATUS_FAILURE;
         }
 
@@ -172,6 +176,10 @@ ANSC_STATUS FwDlDmlDIDownloadNow(ANSC_HANDLE hContext)
         if( ret == ANSC_STATUS_FAILURE)
         {
             CcspTraceError((" Failed to set URL, Ignoring request \n"));
+#if defined(FEATURE_NETWORK_LOGS)
+            syslog_networklog("NETWORK",LOG_ERR,"%s","Failed to set URL, Ignoring request");
+#endif
+
             return ANSC_STATUS_FAILURE;
         }
 
@@ -179,6 +187,9 @@ ANSC_STATUS FwDlDmlDIDownloadNow(ANSC_HANDLE hContext)
     else
     {
         CcspTraceError((" URL or FW Name is missing, Ignoring request \n"));
+#if defined(FEATURE_NETWORK_LOGS)
+            syslog_networklog("NETWORK",LOG_ERR,"%s","URL or FW Name is missing, Ignoring request");
+#endif
         return ANSC_STATUS_FAILURE;
     }
 
@@ -191,6 +202,9 @@ ANSC_STATUS FwDlDmlDIDownloadNow(ANSC_HANDLE hContext)
     else if(dl_status == 200)
     {
         CcspTraceError((" Image is already downloaded, Ignoring request \n"));
+#if defined(FEATURE_NETWORK_LOGS)
+        syslog_networklog("NETWORK",LOG_ERR,"%s","Image is already downloaded, Ignoring request");
+#endif
         return ANSC_STATUS_FAILURE;
     }
 
@@ -376,6 +390,9 @@ void FwDl_ThreadFunc()
         {
             CcspTraceError((" FW DL is failed with status %d \n", dl_status));
             syscfg_set_commit(NULL, "FWDWLD_status", "Failed");
+#if defined(FEATURE_NETWORK_LOGS)
+            syslog_networklog("NETWORK",LOG_ERR,"%s %d","Firmware download is failed with status ",dl_status);
+#endif
         }
 
 
@@ -417,6 +434,9 @@ void FwDl_ThreadFunc()
             {
                 syscfg_set(NULL, "firmwarename", valid_fw);
                 syscfg_set_commit(NULL, "FWDWLD_status", "Completed");
+#if defined(FEATURE_NETWORK_LOGS)
+                syslog_networklog("NETWORK",LOG_ERR,"%s %s","Firmware update successful status with firmware version ",valid_fw);
+#endif
                 break;
             }
             else if(dl_status >= 400)
