@@ -406,7 +406,7 @@ ANSC_STATUS FwDlDmlDIDownloadAndFactoryReset(ANSC_HANDLE hContext)
 ANSC_STATUS FwDmlDIGetURL(ANSC_HANDLE hContext)
 {
     PDEVICE_INFO     pMyObject = (PDEVICE_INFO)hContext;
-    if(syscfg_get(NULL,"xconf_url",pMyObject->DownloadURL, sizeof(pMyObject->DownloadURL)) == 0)
+    if(syscfg_get(NULL,"xconf_url",pMyObject->DownloadURL,128) == 0)
     {
         return ANSC_STATUS_SUCCESS;
     }
@@ -450,16 +450,7 @@ ANSC_STATUS FwDlDmlDISetURL(ANSC_HANDLE hContext, char *URL)
 {
     PDEVICE_INFO     pMyObject = (PDEVICE_INFO)hContext;
 
-    if (URL && (AnscSizeOfString(URL) < sizeof(pMyObject->DownloadURL)))
-    {
-        AnscCopyString(pMyObject->DownloadURL, URL);
-    }
-    else
-    {
-        CcspTraceWarning(("%s: URL is too long.\n", __FUNCTION__));
-        return ANSC_STATUS_BAD_SIZE;
-    }
-
+    AnscCopyString(pMyObject->DownloadURL, URL);
     if(syscfg_set_commit(NULL, "xconf_url",pMyObject->DownloadURL) != 0)
     {
         CcspTraceWarning(("%s: syscfg_set failed \n", __FUNCTION__));
@@ -472,15 +463,7 @@ ANSC_STATUS FwDlDmlDISetImage(ANSC_HANDLE hContext, char *Image)
 {
     PDEVICE_INFO     pMyObject = (PDEVICE_INFO)hContext;
 
-    if (Image && (AnscSizeOfString(Image) < sizeof(pMyObject->Firmware_To_Download)))
-    {
-        AnscCopyString(pMyObject->Firmware_To_Download, Image);
-    }
-    else
-    {
-        CcspTraceWarning(("%s: Image name is too long.\n", __FUNCTION__));
-        return ANSC_STATUS_BAD_SIZE;
-    }
+    AnscCopyString(pMyObject->Firmware_To_Download, Image);
 
     if(syscfg_set_commit(NULL, "fw_to_upgrade", pMyObject->Firmware_To_Download) != 0)
     {

@@ -42,6 +42,8 @@
 #include "cosa_plugin_api.h" 
 #include "ssp_global.h"
 
+#define CM_HTTPURL_LEN 512
+
 typedef  ANSC_HANDLE
 (*PFN_DM_CREATE)
     (
@@ -74,13 +76,11 @@ _DEVICE_INFO
     BOOL            Download_Control_Flag;
     char            Current_Firmware[128];
     char            Firmware_To_Download[128];
-    char            DownloadURL[2048];
+    char            DownloadURL[128];
     ULONG           DeferFWDownloadReboot;
 } 
 DEVICE_INFO, *PDEVICE_INFO;
 
-//To store URL + FW + some extra overhead.
-#define CM_HTTPURL_LEN (sizeof(((DEVICE_INFO *)0)->DownloadURL) + sizeof(((DEVICE_INFO *)0)->Firmware_To_Download) + 10)
 
 #define BACKEND_MANAGER_CLASS_CONTENT                                       \
         PDEVICE_INFO            pDeviceInfo;                                \
