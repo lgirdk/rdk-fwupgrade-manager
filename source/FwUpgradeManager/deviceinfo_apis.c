@@ -40,6 +40,7 @@
 #include "cap.h"
 #include <syscfg/syscfg.h>
 #include <ccsp_syslog.h>
+#include "ccsp_psm_helper.h"
 #ifdef FEATURE_RDKB_LED_MANAGER
 #include <sysevent/sysevent.h>
 extern int sysevent_fd ;
@@ -61,6 +62,67 @@ extern char g_Subsystem[32];
 extern ANSC_HANDLE bus_handle;
 
 static char valid_fw[256 + 1];
+
+static void checkCallStatus(void)
+{
+    char *paramNames[]={ "Device.Services.VoiceService.1.CallControl.Line.1.CallStatus", "Device.Services.VoiceService.1.CallControl.Line.2.CallStatus" };
+    parameterValStruct_t **valStrCallStatus = NULL;
+    char *compo = "eRT.com.cisco.spvtg.ccsp.telcovoicemanager";
+    char *bus = "/com/cisco/spvtg/ccsp/telcovoicemanager";
+    int  nval = 0;
+    int ret = CCSP_FAILURE;
+
+    for (int i = 0; i <= 1440; i++) /* Check whether it reached 24hrs (24 * 60) and if so, proceed to reboot irrespective of voice status */
+    {
+        ret = CcspBaseIf_getParameterValues(bus_handle,
+                                                compo,
+                                                bus,
+                                                paramNames,
+                                                2,
+                                                &nval,
+                                                &valStrCallStatus);
+        if ((CCSP_SUCCESS == ret) && (nval == 2))
+        {
+            if (strcmp(valStrCallStatus[0]->parameterValue, "Connected") == 0 ||
+                strcmp(valStrCallStatus[0]->parameterValue, "Dialing") == 0 ||
+                strcmp(valStrCallStatus[0]->parameterValue, "Delivered") == 0 ||
+                strcmp(valStrCallStatus[0]->parameterValue, "Alerting") == 0 ||
+                strcmp(valStrCallStatus[1]->parameterValue, "Connected") == 0 ||
+                strcmp(valStrCallStatus[1]->parameterValue, "Dialing") == 0 ||
+                strcmp(valStrCallStatus[1]->parameterValue, "Delivered") == 0 ||
+                strcmp(valStrCallStatus[1]->parameterValue, "Alerting") == 0)
+            {
+                CcspTraceError(("Reboot is delayed due to active call or call establishment in progress.\n"));
+                sleep(60);
+            }
+            else if ((strcmp(valStrCallStatus[0]->parameterValue, "Idle") == 0 ||
+                      strcmp(valStrCallStatus[0]->parameterValue, "Disconnected") == 0) &&
+                     (strcmp(valStrCallStatus[1]->parameterValue, "Idle") == 0 ||
+                      strcmp(valStrCallStatus[1]->parameterValue, "Disconnected") == 0))
+            {
+                CcspTraceInfo(("Line is not in a call.\n"));
+                break;
+            }
+            else
+            {
+                CcspTraceError(("Unknown call status.\n"));
+            }
+
+            CcspTraceInfo(("CallStatus of Line 1 & Line 2 are %s & %s\n", valStrCallStatus[0]->parameterValue, valStrCallStatus[1]->parameterValue));
+        }
+        else
+        {
+            CcspTraceError(("Failed to get call status. Exiting loop.\n"));
+            break;
+        }
+
+        if( valStrCallStatus )
+        {
+            free_parameterValStruct_t (bus_handle, nval, valStrCallStatus);
+        }
+
+    }
+}
 
 ANSC_STATUS FwDlDmlDIGetDLFlag(ANSC_HANDLE hContext)
 {
@@ -566,6 +628,7 @@ void FwDl_ThreadFunc()
 
     if (dl_status == 200)
     {
+        checkCallStatus();
         ret = fwupgrade_hal_download_reboot_now();
 
         if(ret == ANSC_STATUS_SUCCESS)
