@@ -59,6 +59,79 @@ extern ANSC_HANDLE bus_handle;
 
 static char valid_fw[256 + 1];
 
+static void drop_root()
+{
+    cap_user app_caps;
+    app_caps.caps = NULL;
+    app_caps.user_name = NULL;
+
+    if(!drop_root_priv(&app_caps))
+    {
+	    CcspTraceInfo(("droproot function failed!\n"));
+    }
+}
+
+void checkCallStatus()
+{
+    char *paramNames[]={ "Device.Services.VoiceService.1.CallControl.Line.1.CallStatus", "Device.Services.VoiceService.1.CallControl.Line.2.CallStatus" };
+    parameterValStruct_t **valStrCallStatus = NULL;
+    char *compo = "eRT.com.cisco.spvtg.ccsp.telcovoicemanager";
+    char *bus = "/com/cisco/spvtg/ccsp/telcovoicemanager";
+    int  nval = 0;
+    int ret = CCSP_FAILURE;
+
+    for (int i = 0; i <= 1440; i++) /* Check whether it reached 24hrs (24 * 60) and if so, proceed to reboot irrespective of voice status */
+    {
+        ret = CcspBaseIf_getParameterValues(bus_handle,
+                                                compo,
+                                                bus,
+                                                paramNames,
+                                                2,
+                                                &nval,
+                                                &valStrCallStatus);
+        if ((CCSP_SUCCESS == ret) && (nval == 2))
+        {
+            if (strcmp(valStrCallStatus[0]->parameterValue, "Connected") == 0 ||
+                strcmp(valStrCallStatus[0]->parameterValue, "Dialing") == 0 ||
+                strcmp(valStrCallStatus[0]->parameterValue, "Delivered") == 0 ||
+                strcmp(valStrCallStatus[0]->parameterValue, "Alerting") == 0 ||
+                strcmp(valStrCallStatus[1]->parameterValue, "Connected") == 0 ||
+                strcmp(valStrCallStatus[1]->parameterValue, "Dialing") == 0 ||
+                strcmp(valStrCallStatus[1]->parameterValue, "Delivered") == 0 ||
+                strcmp(valStrCallStatus[1]->parameterValue, "Alerting") == 0)
+            {
+                CcspTraceError(("Reboot is delayed due to active call or call establishment in progress.\n"));
+                sleep(60);
+            }
+            else if ((strcmp(valStrCallStatus[0]->parameterValue, "Idle") == 0 ||
+                      strcmp(valStrCallStatus[0]->parameterValue, "Disconnected") == 0) &&
+                     (strcmp(valStrCallStatus[1]->parameterValue, "Idle") == 0 ||
+                      strcmp(valStrCallStatus[1]->parameterValue, "Disconnected") == 0))
+            {
+                CcspTraceInfo(("Line is not in a call.\n"));
+                break;
+            }
+            else
+            {
+                CcspTraceError(("Unknown call status.\n"));
+            }
+
+            CcspTraceInfo(("CallStatus of Line 1 & Line 2 are %s & %s\n", valStrCallStatus[0]->parameterValue, valStrCallStatus[1]->parameterValue));
+        }
+        else
+        {
+            CcspTraceError(("Failed to get call status. Exiting loop.\n"));
+            break;
+        }
+
+        if( valStrCallStatus )
+        {
+            free_parameterValStruct_t (bus_handle, nval, valStrCallStatus);
+        }
+
+    }
+}
+
 ANSC_STATUS FwDlDmlDIGetDLFlag(ANSC_HANDLE hContext)
 {
     PDEVICE_INFO      pMyObject    = (PDEVICE_INFO)hContext;
@@ -349,15 +422,7 @@ void FwDl_ThreadFunc()
     int dl_status = 0;
     int ret = ANSC_STATUS_FAILURE;
     ULONG reboot_ready_status = 0;
-    cap_user app_caps;
-    app_caps.caps = NULL;
-    app_caps.user_name = NULL;
     char sysbuf[16];
-    char *paramNames[]= { "Device.Services.VoiceService.1.CallControl.Line.1.CallStatus", "Device.Services.VoiceService.1.CallControl.Line.2.CallStatus" };
-    parameterValStruct_t **valStrCallStatus;
-    char *compo = "eRT.com.cisco.spvtg.ccsp.telcovoicemanager";
-    char *bus = "/com/cisco/spvtg/ccsp/telcovoicemanager";
-    int  nval = 0;
 
     pthread_detach(pthread_self());
     CcspTraceInfo(("Gaining root permission to download and write the code to flash \n"));
@@ -496,51 +561,7 @@ void FwDl_ThreadFunc()
 
     if (dl_status == 200)
     {
-        for (int i = 0; i <= 1440; i++) /* Check whether it reached 24hrs (24 * 60) and if so, proceed to reboot irrespective of voice status */
-        {
-            ret = CcspBaseIf_getParameterValues(bus_handle,
-                                                compo,
-                                                bus,
-                                                paramNames,
-                                                2,
-                                                &nval,
-                                                &valStrCallStatus);
-            if ((CCSP_SUCCESS == ret) && (nval == 2))
-            {
-                if (strcmp(valStrCallStatus[0]->parameterValue, "Connected") == 0 ||
-                    strcmp(valStrCallStatus[0]->parameterValue, "Dialing") == 0 ||
-                    strcmp(valStrCallStatus[0]->parameterValue, "Delivered") == 0 ||
-                    strcmp(valStrCallStatus[0]->parameterValue, "Alerting") == 0 ||
-                    strcmp(valStrCallStatus[1]->parameterValue, "Connected") == 0 ||
-                    strcmp(valStrCallStatus[1]->parameterValue, "Dialing") == 0 ||
-                    strcmp(valStrCallStatus[1]->parameterValue, "Delivered") == 0 ||
-                    strcmp(valStrCallStatus[1]->parameterValue, "Alerting") == 0)
-                {
-                    CcspTraceError(("Reboot is delayed due to active call or call establishment in progress.\n"));
-                    sleep(60);
-                }
-                else if ((strcmp(valStrCallStatus[0]->parameterValue, "Idle") == 0 ||
-                          strcmp(valStrCallStatus[0]->parameterValue, "Disconnected") == 0) &&
-                         (strcmp(valStrCallStatus[1]->parameterValue, "Idle") == 0 ||
-                          strcmp(valStrCallStatus[1]->parameterValue, "Disconnected") == 0))
-                {
-                    CcspTraceInfo(("Line is not in a call.\n"));
-                    break;
-                }
-                else
-                {
-                    CcspTraceError(("Unknown call status.\n"));
-                }
-            }
-            else
-            {
-                CcspTraceError(("Failed to get call status. Exiting loop.\n"));
-                break;
-            }
-
-            CcspTraceInfo(("CallStatus of Line 1 & Line 2 are %s & %s\n", valStrCallStatus[0]->parameterValue, valStrCallStatus[1]->parameterValue));
-        }
-
+        checkCallStatus();
         ret = fwupgrade_hal_download_reboot_now();
 
         if(ret == ANSC_STATUS_SUCCESS)
@@ -555,10 +576,7 @@ void FwDl_ThreadFunc()
 
 EXIT:
     CcspTraceInfo(("Dropping root permission...\n"));
-    init_capability();
-    drop_root_caps(&app_caps);
-    update_process_caps(&app_caps);
-    read_capability(&app_caps);
+    drop_root();
 }
 
 void FwDlAndFR_ThreadFunc()
@@ -667,10 +685,7 @@ void FwDlAndFR_ThreadFunc()
 /* Drop the privilege when flashing error happens. In successful flashing case, CPE is rebooting anyway */
 EXIT:
     CcspTraceInfo(("Dropping root permission...\n"));
-    init_capability();
-    drop_root_caps(&appcaps);
-    update_process_caps(&appcaps);
-
+    drop_root();
 }
 
 convert_to_validFW(char *fw,char *valid_fw)
