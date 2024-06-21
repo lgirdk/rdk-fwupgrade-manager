@@ -48,6 +48,10 @@ extern token_t sysevent_token;
 #define FW_DOWNLOAD_STOP_EVENT "rdkb_fwdownload_stop"
 #define FW_UPDATE_STOP_EVENT "rdkb_fwupdate_stop"
 #define FW_UPDATE_COMPLETE_EVENT "rdkb_fwupdate_complete"
+#ifdef FEATURE_RDKB_LED_MANAGER_CAPTIVE_PORTAL
+#define HTTP_LED_FLASH_DISABLE_FLAG "/tmp/.dwd_led_blink_disable"
+#define FW_DOWNLOAD_STOP_CAPTIVEMODE "rdkb_fwdownload_stop_captivemode"
+#endif
 #endif
 #define MAX_PROTOCOL  16
 
@@ -492,25 +496,60 @@ void FwDl_ThreadFunc()
     int dl_status = 0;
     int ret = ANSC_STATUS_FAILURE;
     ULONG reboot_ready_status = 0;
+#if defined (FEATURE_RDKB_LED_MANAGER_CAPTIVE_PORTAL)
+    char redirFlag[10]={0};
+    char captivePortalEnable[10]={0};
+    bool led_disable = false;
+    FILE *fp = fopen(HTTP_LED_FLASH_DISABLE_FLAG, "r");
+    if(fp != NULL)
+	    led_disable = true;
+#endif 
 
     pthread_detach(pthread_self());
     CcspTraceInfo(("Gaining root permission to download and write the code to flash \n"));
     gain_root_privilege();
     // Set download led here
-#ifdef FEATURE_RDKB_LED_MANAGER
+#if defined (FEATURE_RDKB_LED_MANAGER)
+#if defined (FEATURE_RDKB_LED_MANAGER_CAPTIVE_PORTAL)
+    if (!led_disable) {
+	    printf("Led Flashing Not Disabled \n");
+	    if (sysevent_fd != -1) {
+		    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_DOWNLOAD_START_EVENT, 0);
+	    }
+    }
+#else
     sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_DOWNLOAD_START_EVENT, 0);
+#endif
 #endif
     ret = fwupgrade_hal_download ();
     if( ret == ANSC_STATUS_FAILURE)
     {
         CcspTraceError((" Failed to start download \n"));
-#ifdef FEATURE_RDKB_LED_MANAGER
+#if defined (FEATURE_RDKB_LED_MANAGER)
     /* Either image download or flashing failed. set previous state */
+#if defined (FEATURE_RDKB_LED_MANAGER_CAPTIVE_PORTAL)
+            if (!led_disable) {
+            printf("Led Flashing Not Disabled \n");
+            if (!syscfg_get(NULL, "redirection_flag", redirFlag, sizeof(redirFlag)) &&
+               !syscfg_get(NULL, "CaptivePortal_Enable", captivePortalEnable, sizeof(captivePortalEnable))) {
+              if (!strncmp(redirFlag, "true", 4) && !strncmp(captivePortalEnable, "true", 4)) {
+                  if (sysevent_fd != -1) {
+                      sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_DOWNLOAD_STOP_CAPTIVEMODE, 0);
+                  }
+              } else {
+                  if (sysevent_fd != -1) {
+                      sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_DOWNLOAD_STOP_EVENT, 0);
+                  }
+              }
+            }
+            } 
+#else
     if(sysevent_fd != -1)
     {
-        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_UPDATE_STOP_EVENT, 0);
+	    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_UPDATE_STOP_EVENT, 0);
     }
 #endif
+#endif 
         goto EXIT;
     }
     else
@@ -544,22 +583,59 @@ void FwDl_ThreadFunc()
             else if(dl_status >= 400)
             {
                 CcspTraceError((" FW DL is failed with status %d \n", dl_status));
-#ifdef FEATURE_RDKB_LED_MANAGER
+#if defined (FEATURE_RDKB_LED_MANAGER)
+#if defined (FEATURE_RDKB_LED_MANAGER_CAPTIVE_PORTAL)
                 /* Image download is failed */
+	    if (!led_disable) {	
+            printf("Led Flashing Not Disabled \n");
+            if (!syscfg_get(NULL, "redirection_flag", redirFlag, sizeof(redirFlag)) &&
+               !syscfg_get(NULL, "CaptivePortal_Enable", captivePortalEnable, sizeof(captivePortalEnable))) {
+              if (!strncmp(redirFlag, "true", 4) && !strncmp(captivePortalEnable, "true", 4)) {
+                  if (sysevent_fd != -1) {
+                      sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_DOWNLOAD_STOP_CAPTIVEMODE, 0);
+                  }
+              } else {
+                  if (sysevent_fd != -1) {
+                      sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_DOWNLOAD_STOP_EVENT, 0);
+                  }
+              }
+            }
+            }
+#else
                 if(sysevent_fd != -1)
                 {
-                    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_DOWNLOAD_STOP_EVENT, 0);
+                  sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_DOWNLOAD_STOP_EVENT, 0);
                 }
+#endif
 #endif
                 goto EXIT;
             }
         }
-#ifdef FEATURE_RDKB_LED_MANAGER
+#if defined (FEATURE_RDKB_LED_MANAGER) 
         /* we are here because fw download and flashing succeeded . Set previous led state just before reboot*/
+
+#if defined (FEATURE_RDKB_LED_MANAGER_CAPTIVE_PORTAL)
+	    if (!led_disable) {
+            printf("Led Flashing Not Disabled \n");
+            if (!syscfg_get(NULL, "redirection_flag", redirFlag, sizeof(redirFlag)) &&
+               !syscfg_get(NULL, "CaptivePortal_Enable", captivePortalEnable, sizeof(captivePortalEnable))) {
+              if (!strncmp(redirFlag, "true", 4) && !strncmp(captivePortalEnable, "true", 4)) {
+                  if (sysevent_fd != -1) {
+                      sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_DOWNLOAD_STOP_CAPTIVEMODE, 0);
+                  }
+              } else {
+                  if (sysevent_fd != -1) {
+                      sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_DOWNLOAD_STOP_EVENT, 0);
+                  }
+              }
+            }
+          }
+#else
         if(sysevent_fd != -1)
         {
             sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_UPDATE_COMPLETE_EVENT, 0);
-        }
+	}
+#endif
 #endif
         CcspTraceInfo((" FW DL is over \n"));
 
@@ -595,6 +671,11 @@ EXIT:
     init_capability();
     drop_root_caps(&appcaps);
     update_process_caps(&appcaps);
+#if defined (FEATURE_RDKB_LED_MANAGER_CAPTIVE_PORTAL)
+if (led_disable == true) {
+    fclose(fp);
+}
+#endif
 }
 
 void FwDlAndFR_ThreadFunc()
@@ -602,13 +683,30 @@ void FwDlAndFR_ThreadFunc()
     int dl_status = 0;
     int ret = ANSC_STATUS_FAILURE;
     ULONG reboot_ready_status = 0;
+#if defined (FEATURE_RDKB_LED_MANAGER_CAPTIVE_PORTAL)
+    char redirFlag[10]={0};
+    char captivePortalEnable[10]={0};
+    bool led_disable = false;
+    FILE *fp = fopen(HTTP_LED_FLASH_DISABLE_FLAG, "r");
+    if(fp != NULL)
+            led_disable = true;
+#endif    
 
     pthread_detach(pthread_self());
     /* Gain root privilge before flashing */
     gain_root_privilege();
     /* HAL layer will do downloand and flashing . Set download led */
-#ifdef FEATURE_RDKB_LED_MANAGER
+#if defined (FEATURE_RDKB_LED_MANAGER)
+#if defined (FEATURE_RDKB_LED_MANAGER_CAPTIVE_PORTAL)
+    if (!led_disable) {
+	    printf("Led Flashing Not Disabled \n");
+	    if (sysevent_fd != -1) {
+		    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_DOWNLOAD_START_EVENT, 0);
+	    }
+    } 
+#else 
     sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_DOWNLOAD_START_EVENT, 0);
+#endif    
 #endif
     ret = fwupgrade_hal_update_and_factoryreset ();
     if( ret == ANSC_STATUS_FAILURE)
@@ -647,23 +745,59 @@ void FwDlAndFR_ThreadFunc()
             {
                 CcspTraceError((" FW DL is failed with status %d \n", dl_status));
                 /* Drop the privilege.*/
-#ifdef FEATURE_RDKB_LED_MANAGER
+#if defined (FEATURE_RDKB_LED_MANAGER)
                 // Download failed
+#if defined (FEATURE_RDKB_LED_MANAGER_CAPTIVE_PORTAL)
+            if (!led_disable) {
+	    printf("Led Flashing Not Disabled \n");
+            if (!syscfg_get(NULL, "redirection_flag", redirFlag, sizeof(redirFlag)) &&
+               !syscfg_get(NULL, "CaptivePortal_Enable", captivePortalEnable, sizeof(captivePortalEnable))) {
+              if (!strncmp(redirFlag, "true", 4) && !strncmp(captivePortalEnable, "true", 4)) {
+                  if (sysevent_fd != -1) {
+                      sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_DOWNLOAD_STOP_CAPTIVEMODE, 0);
+                  }
+              } else {
+                  if (sysevent_fd != -1) {
+                      sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_DOWNLOAD_STOP_EVENT, 0);
+                  }
+              }
+            }
+            }
+#else
                 if(sysevent_fd != -1)
                 {
                     sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_DOWNLOAD_STOP_EVENT, 0);
                 }
 #endif
+#endif
                 goto EXIT;
             }
         }
 
-#ifdef FEATURE_RDKB_LED_MANAGER
+#if defined (FEATURE_RDKB_LED_MANAGER) 
         /* we are here because fw download and flashing succeeded . Set previous led state just before reboot*/
+#if defined (FEATURE_RDKB_LED_MANAGER_CAPTIVE_PORTAL)
+	if (!led_disable) {
+            printf("Led Flashing Not Disabled \n");
+            if (!syscfg_get(NULL, "redirection_flag", redirFlag, sizeof(redirFlag)) &&
+               !syscfg_get(NULL, "CaptivePortal_Enable", captivePortalEnable, sizeof(captivePortalEnable))) {
+              if (!strncmp(redirFlag, "true", 4) && !strncmp(captivePortalEnable, "true", 4)) {
+                  if (sysevent_fd != -1) {
+                      sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_DOWNLOAD_STOP_CAPTIVEMODE, 0);
+                  }
+              } else {
+                  if (sysevent_fd != -1) {
+                      sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_DOWNLOAD_STOP_EVENT, 0);
+                  }
+              }
+            }
+          }
+#else
         if(sysevent_fd != -1)
         {
             sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_LED_STATE, FW_UPDATE_COMPLETE_EVENT, 0);
         }
+#endif	
 #endif
 
 
@@ -700,6 +834,11 @@ EXIT:
     init_capability();
     drop_root_caps(&appcaps);
     update_process_caps(&appcaps);
+#if defined (FEATURE_RDKB_LED_MANAGER_CAPTIVE_PORTAL)
+if (led_disable == true) {
+    fclose(fp);
+}
+#endif    
 
 }
 
