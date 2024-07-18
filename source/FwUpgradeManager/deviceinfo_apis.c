@@ -59,18 +59,6 @@ extern ANSC_HANDLE bus_handle;
 
 static char valid_fw[256 + 1];
 
-static void drop_root()
-{
-    cap_user app_caps;
-    app_caps.caps = NULL;
-    app_caps.user_name = NULL;
-
-    if(!drop_root_priv(&app_caps))
-    {
-	    CcspTraceInfo(("droproot function failed!\n"));
-    }
-}
-
 void checkCallStatus()
 {
     char *paramNames[]={ "Device.Services.VoiceService.1.CallControl.Line.1.CallStatus", "Device.Services.VoiceService.1.CallControl.Line.2.CallStatus" };
@@ -422,6 +410,7 @@ void FwDl_ThreadFunc()
     int dl_status = 0;
     int ret = ANSC_STATUS_FAILURE;
     ULONG reboot_ready_status = 0;
+    cap_user app_caps;
     char sysbuf[16];
 
     pthread_detach(pthread_self());
@@ -576,7 +565,12 @@ void FwDl_ThreadFunc()
 
 EXIT:
     CcspTraceInfo(("Dropping root permission...\n"));
-    drop_root();
+    app_caps.caps = NULL;
+    app_caps.user_name = NULL;
+    init_capability();
+    drop_root_caps(&app_caps);
+    update_process_caps(&app_caps);
+    read_capability(&app_caps);
 }
 
 void FwDlAndFR_ThreadFunc()
@@ -685,7 +679,10 @@ void FwDlAndFR_ThreadFunc()
 /* Drop the privilege when flashing error happens. In successful flashing case, CPE is rebooting anyway */
 EXIT:
     CcspTraceInfo(("Dropping root permission...\n"));
-    drop_root();
+    init_capability();
+    drop_root_caps(&appcaps);
+    update_process_caps(&appcaps);
+
 }
 
 convert_to_validFW(char *fw,char *valid_fw)
