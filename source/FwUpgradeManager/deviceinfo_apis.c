@@ -472,15 +472,15 @@ void FwDl_ThreadFunc()
         CcspTraceInfo((" Sleeping to prevent 500 error \n"));
         sleep(10);
 
-        /* Check if the /tmp/wget.log file was created, if not wait an adidtional time */
-        if (access("/tmp/wget.log", F_OK) != 0)
+        /* Check if the /rdklogs/logs/fwupgrade_hal_debug_curl.txt file was created, if not wait an adidtional time */
+        if (access("/rdklogs/logs/fwupgrade_hal_debug_curl.txt", F_OK) != 0)
         {
-            CcspTraceInfo(("/tmp/wget.log doesn't exist. Sleeping an additional 10 seconds \n"));
+            CcspTraceInfo(("/rdklogs/logs/fwupgrade_hal_debug_curl.txt doesn't exist. Sleeping an additional 10 seconds \n"));
             sleep(10);
         }
         else
         {
-            CcspTraceInfo(("/tmp/wget.log created . Continue ...\n"));
+            CcspTraceInfo(("/rdklogs/logs/fwupgrade_hal_debug_curl.txt created . Continue ...\n"));
         }
 
         CcspTraceInfo((" Waiting for FW DL ... \n"));
@@ -599,15 +599,15 @@ void FwDlAndFR_ThreadFunc()
         CcspTraceInfo((" Sleeping to prevent 500 error \n"));
         sleep(10);
 
-        /* Check if the /tmp/wget.log file was created, if not wait an adidtional time */
-        if (access("/tmp/wget.log", F_OK) != 0)
+        /* Check if the /rdklogs/logs/fwupgrade_hal_debug_curl.txt file was created, if not wait an adidtional time */
+        if (access("/rdklogs/logs/fwupgrade_hal_debug_curl.txt", F_OK) != 0)
         {
-            CcspTraceInfo(("/tmp/wget.log doesn't exist. Sleeping an additional 10 seconds \n"));
+            CcspTraceInfo(("/rdklogs/logs/fwupgrade_hal_debug_curl.txt doesn't exist. Sleeping an additional 10 seconds \n"));
             sleep(10);
         }
         else
         {
-            CcspTraceInfo(("/tmp/wget.log created . Continue ...\n"));
+            CcspTraceInfo(("/rdklogs/logs/fwupgrade_hal_debug_curl.txt created . Continue ...\n"));
         }
 
         CcspTraceInfo((" Waiting for FW DL ... \n"));
